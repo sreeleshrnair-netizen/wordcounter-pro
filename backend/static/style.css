@@ -1,39 +1,56 @@
 /* =========================================================
-   WordCounter Pro - Complete CSS
-   Light + Dark Mode
+   WORDCOUNTER PRO
+   COMPLETE RESPONSIVE CSS
+   DARK + LIGHT MODE
+   ========================================================= */
+
+/* =========================================================
+   THEME VARIABLES
    ========================================================= */
 
 :root {
     --bg: #0b0d10;
     --card: #11151a;
     --card-hover: #171c22;
+
     --text: #f5f7fa;
     --muted: #9ca3af;
+
     --border: #29313a;
     --input: #0d1116;
+
     --accent: #8b5cf6;
     --accent-hover: #7c3aed;
     --accent-soft: rgba(139, 92, 246, 0.12);
+
     --success: #22c55e;
     --danger: #ef4444;
+
     --shadow: rgba(0, 0, 0, 0.35);
 }
 
 /* =========================================================
-   LIGHT THEME
+   LIGHT MODE
    ========================================================= */
 
 html[data-theme="light"] {
-    --bg: #f4f7fb;
+    --bg: #f5f7fb;
     --card: #ffffff;
     --card-hover: #f8fafc;
+
     --text: #111827;
     --muted: #64748b;
-    --border: #dce3ec;
+
+    --border: #d9e0e8;
     --input: #ffffff;
+
     --accent: #7c3aed;
     --accent-hover: #6d28d9;
     --accent-soft: rgba(124, 58, 237, 0.08);
+
+    --success: #16a34a;
+    --danger: #dc2626;
+
     --shadow: rgba(15, 23, 42, 0.10);
 }
 
@@ -53,6 +70,7 @@ html {
 
 body {
     min-height: 100vh;
+
     font-family:
         Inter,
         -apple-system,
@@ -66,8 +84,31 @@ body {
     color: var(--text);
 
     transition:
-        background-color 0.25s ease,
-        color 0.25s ease;
+        background-color 0.3s ease,
+        color 0.3s ease;
+}
+
+/* =========================================================
+   SMOOTH THEME TRANSITION
+   ========================================================= */
+
+body,
+.navbar,
+.main-card,
+.editor,
+.upload-area,
+.stat-card,
+.advanced-card,
+.secondary-button,
+.small-button,
+.theme-button,
+.word-frequency,
+textarea {
+    transition:
+        background-color 0.3s ease,
+        color 0.3s ease,
+        border-color 0.3s ease,
+        box-shadow 0.3s ease;
 }
 
 /* =========================================================
@@ -87,10 +128,14 @@ body {
     background: var(--card);
     border-bottom: 1px solid var(--border);
 
-    transition:
-        background-color 0.25s ease,
-        border-color 0.25s ease;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
 }
+
+/* =========================================================
+   LOGO
+   ========================================================= */
 
 .logo {
     display: flex;
@@ -130,13 +175,9 @@ body {
     color: var(--text);
 
     font-size: 19px;
-
     cursor: pointer;
 
-    transition:
-        background-color 0.2s ease,
-        border-color 0.2s ease,
-        transform 0.2s ease;
+    outline: none;
 }
 
 .theme-button:hover {
@@ -146,7 +187,7 @@ body {
 }
 
 .theme-button:active {
-    transform: scale(0.95);
+    transform: scale(0.94);
 }
 
 /* =========================================================
@@ -156,6 +197,7 @@ body {
 main {
     width: min(1180px, 92%);
     margin: 0 auto;
+
     padding: 65px 0 50px;
 }
 
@@ -189,8 +231,8 @@ main {
 .hero h1 {
     font-size: clamp(38px, 6vw, 66px);
     line-height: 1.05;
-    letter-spacing: -2.5px;
 
+    letter-spacing: -2.5px;
     font-weight: 800;
 
     margin-bottom: 20px;
@@ -225,11 +267,6 @@ main {
 
     box-shadow:
         0 20px 50px var(--shadow);
-
-    transition:
-        background-color 0.25s ease,
-        border-color 0.25s ease,
-        box-shadow 0.25s ease;
 }
 
 /* =========================================================
@@ -252,11 +289,6 @@ main {
     border-radius: 18px;
 
     background: var(--input);
-
-    transition:
-        border-color 0.2s ease,
-        background-color 0.2s ease,
-        transform 0.2s ease;
 }
 
 .upload-area:hover,
@@ -264,6 +296,10 @@ main {
     border-color: var(--accent);
     background: var(--accent-soft);
 }
+
+/* =========================================================
+   UPLOAD ICON
+   ========================================================= */
 
 .upload-icon {
     width: 58px;
@@ -312,21 +348,22 @@ main {
     border-radius: 10px;
 
     background: var(--accent);
-    color: white;
+    color: #ffffff;
 
     font-size: 14px;
     font-weight: 700;
 
     cursor: pointer;
-
-    transition:
-        background-color 0.2s ease,
-        transform 0.2s ease;
+    user-select: none;
 }
 
 .upload-button:hover {
     background: var(--accent-hover);
     transform: translateY(-1px);
+}
+
+.upload-button:active {
+    transform: scale(0.97);
 }
 
 /* =========================================================
@@ -351,6 +388,7 @@ main {
 .or {
     display: flex;
     align-items: center;
+
     gap: 15px;
 
     margin: 30px 0;
@@ -361,7 +399,9 @@ main {
 .or::before,
 .or::after {
     content: "";
+
     height: 1px;
+
     flex: 1;
 
     background: var(--border);
@@ -383,10 +423,6 @@ main {
     border-radius: 16px;
 
     background: var(--input);
-
-    transition:
-        background-color 0.25s ease,
-        border-color 0.25s ease;
 }
 
 .editor-header,
@@ -415,6 +451,10 @@ main {
     color: var(--text);
 }
 
+/* =========================================================
+   TEXTAREA
+   ========================================================= */
+
 textarea {
     display: block;
 
@@ -434,10 +474,6 @@ textarea {
     font-family: inherit;
     font-size: 16px;
     line-height: 1.7;
-
-    transition:
-        background-color 0.25s ease,
-        color 0.25s ease;
 }
 
 textarea::placeholder {
@@ -445,7 +481,8 @@ textarea::placeholder {
 }
 
 textarea:focus {
-    box-shadow: inset 0 0 0 1px var(--accent);
+    box-shadow:
+        inset 0 0 0 1px var(--accent);
 }
 
 /* =========================================================
@@ -465,10 +502,6 @@ textarea:focus {
     font-weight: 600;
 
     cursor: pointer;
-
-    transition:
-        background-color 0.2s ease,
-        border-color 0.2s ease;
 }
 
 .small-button:hover {
@@ -504,11 +537,6 @@ textarea:focus {
     border-radius: 15px;
 
     background: var(--input);
-
-    transition:
-        background-color 0.25s ease,
-        border-color 0.25s ease,
-        transform 0.2s ease;
 }
 
 .stat-card:hover {
@@ -554,15 +582,10 @@ textarea:focus {
     border-radius: 15px;
 
     background: var(--input);
-
-    transition:
-        background-color 0.25s ease,
-        border-color 0.25s ease;
 }
 
 .advanced-card h3 {
     margin-bottom: 20px;
-
     font-size: 17px;
 }
 
@@ -613,6 +636,7 @@ textarea:focus {
 .word-frequency {
     display: inline-flex;
     align-items: center;
+
     gap: 8px;
 
     padding: 8px 11px;
@@ -653,6 +677,7 @@ textarea:focus {
 .actions {
     display: flex;
     justify-content: center;
+
     gap: 12px;
 
     margin-top: 25px;
@@ -671,16 +696,12 @@ textarea:focus {
     font-weight: 700;
 
     cursor: pointer;
-
-    transition:
-        background-color 0.2s ease,
-        border-color 0.2s ease,
-        transform 0.2s ease;
 }
 
 .secondary-button:hover {
     background: var(--accent-soft);
     border-color: var(--accent);
+
     transform: translateY(-1px);
 }
 
@@ -699,41 +720,63 @@ footer {
 }
 
 /* =========================================================
-   LIGHT MODE EXTRA OVERRIDES
+   LIGHT MODE POLISH
    ========================================================= */
 
 html[data-theme="light"] body {
-    background: #f4f7fb;
+    background: #f5f7fb;
     color: #111827;
 }
 
 html[data-theme="light"] .navbar {
     background: #ffffff;
+
+    box-shadow:
+        0 4px 20px rgba(15, 23, 42, 0.05);
 }
 
-html[data-theme="light"] .main-card,
-html[data-theme="light"] .stat-card,
-html[data-theme="light"] .advanced-card {
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+html[data-theme="light"] .main-card {
+    box-shadow:
+        0 20px 50px rgba(15, 23, 42, 0.08);
+}
+
+html[data-theme="light"] .upload-area {
+    background: #ffffff;
+}
+
+html[data-theme="light"] .editor {
+    background: #ffffff;
 }
 
 html[data-theme="light"] textarea {
+    background: #ffffff;
     color: #111827;
 }
 
-html[data-theme="light"] .editor,
-html[data-theme="light"] .upload-area,
-html[data-theme="light"] .stat-card,
+html[data-theme="light"] .stat-card {
+    background: #ffffff;
+
+    box-shadow:
+        0 8px 25px rgba(15, 23, 42, 0.04);
+}
+
 html[data-theme="light"] .advanced-card {
     background: #ffffff;
+
+    box-shadow:
+        0 8px 25px rgba(15, 23, 42, 0.04);
 }
 
 html[data-theme="light"] .word-frequency {
     background: #f8fafc;
 }
 
+html[data-theme="light"] .secondary-button {
+    background: #ffffff;
+}
+
 /* =========================================================
-   DARK MODE EXTRA
+   DARK MODE
    ========================================================= */
 
 html[data-theme="dark"] body {
@@ -742,7 +785,18 @@ html[data-theme="dark"] body {
 }
 
 /* =========================================================
-   RESPONSIVE
+   ACCESSIBILITY
+   ========================================================= */
+
+button:focus-visible,
+label:focus-visible,
+textarea:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+
+/* =========================================================
+   RESPONSIVE - TABLET
    ========================================================= */
 
 @media (max-width: 850px) {
@@ -764,6 +818,10 @@ html[data-theme="dark"] body {
         letter-spacing: -1.5px;
     }
 }
+
+/* =========================================================
+   RESPONSIVE - MOBILE
+   ========================================================= */
 
 @media (max-width: 600px) {
 
@@ -815,5 +873,24 @@ html[data-theme="dark"] body {
 
     textarea {
         min-height: 220px;
+    }
+
+    .logo {
+        font-size: 18px;
+    }
+}
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition: none !important;
+        animation: none !important;
     }
 }

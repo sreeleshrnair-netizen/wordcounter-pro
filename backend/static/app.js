@@ -1,963 +1,854 @@
-// ============================================================
-// WordCounter Pro - Complete Frontend JavaScript
-// ============================================================
+// =========================================================
+// WordCounter Pro - Complete app.js
+// =========================================================
 
-const API_BASE = window.location.origin;
+document.addEventListener("DOMContentLoaded", () => {
 
-// ============================================================
-// DOM ELEMENTS
-// ============================================================
+    // -----------------------------------------------------
+    // ELEMENTS
+    // -----------------------------------------------------
 
-const textInput = document.getElementById("textInput");
-const fileInput = document.getElementById("fileInput");
-const dropZone = document.getElementById("dropZone");
-const uploadStatus = document.getElementById("uploadStatus");
+    const themeButton = document.getElementById("themeButton");
+    const textInput = document.getElementById("textInput");
+    const clearButton = document.getElementById("clearButton");
+    const copyTextButton = document.getElementById("copyTextButton");
 
-const themeButton = document.getElementById("themeButton");
-const clearButton = document.getElementById("clearButton");
-const copyTextButton = document.getElementById("copyTextButton");
+    const fileInput = document.getElementById("fileInput");
+    const dropZone = document.getElementById("dropZone");
+    const uploadStatus = document.getElementById("uploadStatus");
 
-const copyResultsButton = document.getElementById("copyResults");
-const downloadResultsButton = document.getElementById("downloadResults");
+    const copyResults = document.getElementById("copyResults");
+    const downloadResults = document.getElementById("downloadResults");
 
-// Statistics
-const wordsElement = document.getElementById("words");
-const charactersElement = document.getElementById("characters");
-const charactersNoSpacesElement =
-    document.getElementById("charactersNoSpaces");
-const paragraphsElement = document.getElementById("paragraphs");
-const sentencesElement = document.getElementById("sentences");
-const linesElement = document.getElementById("lines");
-const uniqueWordsElement = document.getElementById("uniqueWords");
-const readingTimeElement = document.getElementById("readingTime");
-const speakingTimeElement = document.getElementById("speakingTime");
+    // -----------------------------------------------------
+    // THEME
+    // -----------------------------------------------------
 
-const averageWordElement = document.getElementById("averageWord");
-const longestWordElement = document.getElementById("longestWord");
-const topWordsElement = document.getElementById("topWords");
+    function applyTheme(theme) {
 
-// ============================================================
-// CURRENT DATA
-// ============================================================
+        // Set theme on HTML element
+        document.documentElement.dataset.theme = theme;
 
-let currentAnalysis = {
-    words: 0,
-    characters: 0,
-    characters_no_spaces: 0,
-    paragraphs: 0,
-    sentences: 0,
-    lines: 0,
-    unique_words: 0,
-    reading_minutes: 0,
-    speaking_minutes: 0,
-    average_word_length: 0,
-    longest_word: "",
-    top_words: [],
-    text: ""
-};
+        // Save theme
+        localStorage.setItem("wordcounter-theme", theme);
 
-// ============================================================
-// THEME
-// ============================================================
+        // Update button
+        if (themeButton) {
+            if (theme === "dark") {
+                themeButton.textContent = "☀️";
+                themeButton.setAttribute(
+                    "aria-label",
+                    "Switch to light mode"
+                );
+                themeButton.title = "Switch to light mode";
+            } else {
+                themeButton.textContent = "🌙";
+                themeButton.setAttribute(
+                    "aria-label",
+                    "Switch to dark mode"
+                );
+                themeButton.title = "Switch to dark mode";
+            }
+        }
+    }
 
-function applyTheme(theme) {
-    const isLight = theme === "light";
+    function loadTheme() {
 
-    // Main theme attributes
-    document.documentElement.setAttribute(
-        "data-theme",
-        isLight ? "light" : "dark"
-    );
+        const savedTheme =
+            localStorage.getItem("wordcounter-theme");
 
-    document.body.classList.toggle("light-mode", isLight);
-    document.body.classList.toggle("dark-mode", !isLight);
+        if (savedTheme === "light") {
+            applyTheme("light");
+        } else {
+            // Default = dark
+            applyTheme("dark");
+        }
+    }
 
-    // Button icon
     if (themeButton) {
-        themeButton.textContent = isLight ? "☀️" : "🌙";
-        themeButton.setAttribute(
-            "aria-label",
-            isLight ? "Switch to dark mode" : "Switch to light mode"
-        );
-        themeButton.setAttribute(
-            "title",
-            isLight ? "Switch to dark mode" : "Switch to light mode"
-        );
+
+        themeButton.addEventListener("click", () => {
+
+            const currentTheme =
+                document.documentElement.dataset.theme;
+
+            if (currentTheme === "dark") {
+                applyTheme("light");
+            } else {
+                applyTheme("dark");
+            }
+        });
     }
 
-    // Save preference
-    localStorage.setItem("wordcounter-theme", theme);
+    // Load saved theme
+    loadTheme();
 
-    // Apply guaranteed theme variables
-    if (isLight) {
-        document.documentElement.style.setProperty(
-            "--theme-bg",
-            "#f5f7fb"
-        );
-        document.documentElement.style.setProperty(
-            "--theme-card",
-            "#ffffff"
-        );
-        document.documentElement.style.setProperty(
-            "--theme-text",
-            "#111827"
-        );
-        document.documentElement.style.setProperty(
-            "--theme-muted",
-            "#64748b"
-        );
-        document.documentElement.style.setProperty(
-            "--theme-border",
-            "#dbe2ea"
-        );
-        document.documentElement.style.setProperty(
-            "--theme-input",
-            "#ffffff"
-        );
-    } else {
-        document.documentElement.style.setProperty(
-            "--theme-bg",
-            "#0b0d10"
-        );
-        document.documentElement.style.setProperty(
-            "--theme-card",
-            "#11151a"
-        );
-        document.documentElement.style.setProperty(
-            "--theme-text",
-            "#f5f7fa"
-        );
-        document.documentElement.style.setProperty(
-            "--theme-muted",
-            "#9ca3af"
-        );
-        document.documentElement.style.setProperty(
-            "--theme-border",
-            "#29313a"
-        );
-        document.documentElement.style.setProperty(
-            "--theme-input",
-            "#0f1318"
-        );
-    }
-}
+    // -----------------------------------------------------
+    // ANALYSIS
+    // -----------------------------------------------------
 
-function initializeTheme() {
-    const savedTheme = localStorage.getItem("wordcounter-theme");
+    function analyzeText(text) {
 
-    if (savedTheme === "light" || savedTheme === "dark") {
-        applyTheme(savedTheme);
-        return;
-    }
+        if (!text) {
+            return {
+                words: 0,
+                characters: 0,
+                characters_no_spaces: 0,
+                paragraphs: 0,
+                sentences: 0,
+                lines: 0,
+                unique_words: 0,
+                reading_minutes: 0,
+                speaking_minutes: 0,
+                average_word_length: 0,
+                longest_word: "",
+                top_words: []
+            };
+        }
 
-    // Default = dark mode
-    applyTheme("dark");
-}
+        const normalized =
+            text
+                .replace(/\r\n/g, "\n")
+                .replace(/\r/g, "\n");
 
-if (themeButton) {
-    themeButton.addEventListener("click", function () {
-        const currentTheme =
-            document.documentElement.getAttribute("data-theme") ||
-            "dark";
+        const words =
+            normalized.match(
+                /[^\W_]+(?:['’\-][^\W_]+)*/gu
+            ) || [];
 
-        const newTheme =
-            currentTheme === "dark"
-                ? "light"
-                : "dark";
+        const wordCount = words.length;
 
-        applyTheme(newTheme);
-    });
-}
+        const characters =
+            normalized.length;
 
-initializeTheme();
+        const charactersNoSpaces =
+            normalized.replace(/\s/g, "").length;
 
-// ============================================================
-// LIVE THEME CSS
-// This guarantees the button works even if the existing CSS
-// doesn't contain light-mode styles.
-// ============================================================
+        const paragraphs =
+            normalized
+                .split(/\n\s*\n+/)
+                .filter(p => p.trim().length > 0);
 
-const themeStyle = document.createElement("style");
+        const sentenceMatches =
+            normalized.match(
+                /[^.!?。！？]+[.!?。！？]+/gu
+            ) || [];
 
-themeStyle.textContent = `
-    html,
-    body {
-        transition:
-            background-color 0.25s ease,
-            color 0.25s ease;
-    }
+        let sentences =
+            sentenceMatches.length;
 
-    body {
-        background-color: var(--theme-bg);
-        color: var(--theme-text);
-    }
+        if (
+            sentences === 0 &&
+            normalized.trim().length > 0
+        ) {
+            sentences = 1;
+        }
 
-    body.light-mode {
-        background-color: var(--theme-bg) !important;
-        color: var(--theme-text) !important;
-    }
+        const lines =
+            normalized
+                .split("\n")
+                .filter(line => line.trim().length > 0);
 
-    body.light-mode .navbar,
-    body.light-mode .main-card,
-    body.light-mode .stat-card,
-    body.light-mode .advanced-card,
-    body.light-mode .editor,
-    body.light-mode .upload-area {
-        background-color: var(--theme-card);
-        color: var(--theme-text);
-        border-color: var(--theme-border);
-    }
+        const normalizedWords =
+            words.map(word =>
+                word.toLocaleLowerCase()
+            );
 
-    body.light-mode textarea {
-        background-color: var(--theme-input);
-        color: var(--theme-text);
-        border-color: var(--theme-border);
-    }
+        const uniqueWords =
+            new Set(normalizedWords);
 
-    body.light-mode textarea::placeholder {
-        color: #94a3b8;
-    }
+        const frequency = {};
 
-    body.light-mode .editor-header,
-    body.light-mode .editor-footer {
-        color: var(--theme-muted);
-    }
+        normalizedWords.forEach(word => {
+            frequency[word] =
+                (frequency[word] || 0) + 1;
+        });
 
-    body.light-mode footer,
-    body.light-mode .hero p,
-    body.light-mode .stat-card span,
-    body.light-mode .analysis-row span {
-        color: var(--theme-muted);
-    }
+        const topWords =
+            Object.entries(frequency)
+                .sort((a, b) => {
 
-    body.light-mode .or span {
-        background-color: var(--theme-bg);
-        color: var(--theme-muted);
-    }
+                    if (b[1] !== a[1]) {
+                        return b[1] - a[1];
+                    }
 
-    body.light-mode .or {
-        border-color: var(--theme-border);
-    }
+                    return a[0].localeCompare(b[0]);
+                })
+                .slice(0, 10)
+                .map(([word, count]) => ({
+                    word,
+                    count
+                }));
 
-    body.light-mode .theme-button,
-    body.light-mode .small-button,
-    body.light-mode .secondary-button {
-        color: var(--theme-text);
-    }
+        const cleanWords =
+            words.map(word =>
+                word.replace(
+                    /[^\p{L}\p{N}]/gu,
+                    ""
+                )
+            );
 
-    body.light-mode .top-words .empty {
-        color: var(--theme-muted);
-    }
-`;
+        const totalLength =
+            cleanWords.reduce(
+                (total, word) =>
+                    total + word.length,
+                0
+            );
 
-document.head.appendChild(themeStyle);
+        const averageWordLength =
+            wordCount > 0
+                ? Number(
+                    (
+                        totalLength /
+                        wordCount
+                    ).toFixed(2)
+                )
+                : 0;
 
-// ============================================================
-// ANALYZE TEXT LOCALLY
-// ============================================================
+        let longestWord = "";
 
-function analyzeText(text) {
+        if (cleanWords.length > 0) {
 
-    if (!text) {
+            let longestIndex = 0;
+
+            for (
+                let i = 1;
+                i < cleanWords.length;
+                i++
+            ) {
+
+                if (
+                    cleanWords[i].length >
+                    cleanWords[longestIndex].length
+                ) {
+                    longestIndex = i;
+                }
+            }
+
+            longestWord =
+                words[longestIndex];
+        }
+
         return {
-            words: 0,
-            characters: 0,
-            characters_no_spaces: 0,
-            paragraphs: 0,
-            sentences: 0,
-            lines: 0,
-            unique_words: 0,
-            reading_minutes: 0,
-            speaking_minutes: 0,
-            average_word_length: 0,
-            longest_word: "",
-            top_words: [],
-            text: ""
+            words: wordCount,
+
+            characters: characters,
+
+            characters_no_spaces:
+                charactersNoSpaces,
+
+            paragraphs:
+                paragraphs.length,
+
+            sentences: sentences,
+
+            lines: lines.length,
+
+            unique_words:
+                uniqueWords.size,
+
+            reading_minutes:
+                wordCount === 0
+                    ? 0
+                    : Math.max(
+                        1,
+                        Math.ceil(
+                            wordCount / 200
+                        )
+                    ),
+
+            speaking_minutes:
+                wordCount === 0
+                    ? 0
+                    : Math.max(
+                        1,
+                        Math.ceil(
+                            wordCount / 130
+                        )
+                    ),
+
+            average_word_length:
+                averageWordLength,
+
+            longest_word:
+                longestWord,
+
+            top_words:
+                topWords
         };
     }
 
-    const normalizedText = text
-        .replace(/\r\n/g, "\n")
-        .replace(/\r/g, "\n");
+    // -----------------------------------------------------
+    // UPDATE STATISTICS
+    // -----------------------------------------------------
 
-    // Unicode-aware word detection
-    const words = normalizedText.match(
-        /[^\W_]+(?:['’\-][^\W_]+)*/gu
-    ) || [];
+    function setText(id, value) {
 
-    // Paragraphs
-    const paragraphs = normalizedText
-        .split(/\n\s*\n+/)
-        .map(p => p.trim())
-        .filter(Boolean);
+        const element =
+            document.getElementById(id);
 
-    // Sentences
-    const sentenceMatches = normalizedText.match(
-        /[^.!?。！？]+[.!?。！？]+/g
-    ) || [];
-
-    let sentenceCount;
-
-    if (!normalizedText.trim()) {
-        sentenceCount = 0;
-    } else if (sentenceMatches.length === 0) {
-        sentenceCount = 1;
-    } else {
-        sentenceCount = sentenceMatches.length;
+        if (element) {
+            element.textContent = value;
+        }
     }
 
-    // Lines
-    const lines = normalizedText
-        .split("\n")
-        .filter(line => line.trim().length > 0);
+    function updateStatistics(result) {
 
-    // Characters
-    const characters = normalizedText.length;
+        setText("words", result.words);
 
-    const charactersNoSpaces =
-        normalizedText.replace(/\s/g, "").length;
-
-    // Unique words
-    const normalizedWords = words.map(word =>
-        word.toLocaleLowerCase()
-    );
-
-    const uniqueSet = new Set(normalizedWords);
-
-    // Frequency
-    const frequency = {};
-
-    normalizedWords.forEach(word => {
-        frequency[word] =
-            (frequency[word] || 0) + 1;
-    });
-
-    const topWords = Object.entries(frequency)
-        .sort((a, b) => {
-            if (b[1] !== a[1]) {
-                return b[1] - a[1];
-            }
-
-            return a[0].localeCompare(b[0]);
-        })
-        .slice(0, 10)
-        .map(([word, count]) => ({
-            word,
-            count
-        }));
-
-    // Clean words for length calculations
-    const cleanWords = words.map(word =>
-        word.replace(/[^\p{L}\p{N}]/gu, "")
-    );
-
-    // Average word length
-    let averageWordLength = 0;
-
-    if (cleanWords.length > 0) {
-        const totalLength = cleanWords.reduce(
-            (total, word) =>
-                total + word.length,
-            0
+        setText(
+            "characters",
+            result.characters
         );
 
-        averageWordLength =
-            Math.round(
-                (totalLength / cleanWords.length) * 100
-            ) / 100;
+        setText(
+            "charactersNoSpaces",
+            result.characters_no_spaces
+        );
+
+        setText(
+            "paragraphs",
+            result.paragraphs
+        );
+
+        setText(
+            "sentences",
+            result.sentences
+        );
+
+        setText(
+            "lines",
+            result.lines
+        );
+
+        setText(
+            "uniqueWords",
+            result.unique_words
+        );
+
+        setText(
+            "readingTime",
+            result.reading_minutes + " min"
+        );
+
+        setText(
+            "speakingTime",
+            result.speaking_minutes + " min"
+        );
+
+        setText(
+            "averageWord",
+            result.average_word_length
+        );
+
+        setText(
+            "longestWord",
+            result.longest_word || "—"
+        );
+
+        updateTopWords(result.top_words);
     }
 
-    // Longest word
-    let longestWord = "";
+    // -----------------------------------------------------
+    // TOP WORDS
+    // -----------------------------------------------------
 
-    if (cleanWords.length > 0) {
-        let longestIndex = 0;
+    function updateTopWords(words) {
 
-        cleanWords.forEach((word, index) => {
-            if (
-                word.length >
-                cleanWords[longestIndex].length
-            ) {
-                longestIndex = index;
-            }
+        const container =
+            document.getElementById("topWords");
+
+        if (!container) return;
+
+        container.innerHTML = "";
+
+        if (!words || words.length === 0) {
+
+            const empty =
+                document.createElement("span");
+
+            empty.className = "empty";
+
+            empty.textContent =
+                "Start typing to see word frequency.";
+
+            container.appendChild(empty);
+
+            return;
+        }
+
+        words.forEach(item => {
+
+            const element =
+                document.createElement("span");
+
+            element.className =
+                "word-frequency";
+
+            const strong =
+                document.createElement("strong");
+
+            strong.textContent = item.word;
+
+            const small =
+                document.createElement("small");
+
+            small.textContent = item.count;
+
+            element.appendChild(strong);
+            element.appendChild(small);
+
+            container.appendChild(element);
         });
-
-        longestWord = words[longestIndex];
     }
 
-    // Reading time
-    const readingMinutes =
-        words.length > 0
-            ? Math.max(
-                1,
-                Math.round(words.length / 200)
-            )
-            : 0;
+    // -----------------------------------------------------
+    // LIVE ANALYSIS
+    // -----------------------------------------------------
 
-    // Speaking time
-    const speakingMinutes =
-        words.length > 0
-            ? Math.max(
-                1,
-                Math.round(words.length / 130)
-            )
-            : 0;
+    if (textInput) {
 
-    return {
-        words: words.length,
-        characters,
-        characters_no_spaces: charactersNoSpaces,
-        paragraphs: paragraphs.length,
-        sentences: sentenceCount,
-        lines: lines.length,
-        unique_words: uniqueSet.size,
-        reading_minutes: readingMinutes,
-        speaking_minutes: speakingMinutes,
-        average_word_length: averageWordLength,
-        longest_word: longestWord,
-        top_words: topWords,
-        text: normalizedText
-    };
-}
+        textInput.addEventListener(
+            "input",
+            () => {
 
-// ============================================================
-// UPDATE UI
-// ============================================================
-
-function updateUI(data) {
-
-    currentAnalysis = {
-        ...currentAnalysis,
-        ...data
-    };
-
-    if (wordsElement) {
-        wordsElement.textContent =
-            data.words ?? 0;
-    }
-
-    if (charactersElement) {
-        charactersElement.textContent =
-            data.characters ?? 0;
-    }
-
-    if (charactersNoSpacesElement) {
-        charactersNoSpacesElement.textContent =
-            data.characters_no_spaces ?? 0;
-    }
-
-    if (paragraphsElement) {
-        paragraphsElement.textContent =
-            data.paragraphs ?? 0;
-    }
-
-    if (sentencesElement) {
-        sentencesElement.textContent =
-            data.sentences ?? 0;
-    }
-
-    if (linesElement) {
-        linesElement.textContent =
-            data.lines ?? 0;
-    }
-
-    if (uniqueWordsElement) {
-        uniqueWordsElement.textContent =
-            data.unique_words ?? 0;
-    }
-
-    if (readingTimeElement) {
-        readingTimeElement.textContent =
-            `${data.reading_minutes ?? 0} min`;
-    }
-
-    if (speakingTimeElement) {
-        speakingTimeElement.textContent =
-            `${data.speaking_minutes ?? 0} min`;
-    }
-
-    if (averageWordElement) {
-        averageWordElement.textContent =
-            data.average_word_length ?? 0;
-    }
-
-    if (longestWordElement) {
-        longestWordElement.textContent =
-            data.longest_word || "—";
-    }
-
-    updateTopWords(data.top_words || []);
-}
-
-// ============================================================
-// TOP WORDS
-// ============================================================
-
-function updateTopWords(words) {
-
-    if (!topWordsElement) {
-        return;
-    }
-
-    topWordsElement.innerHTML = "";
-
-    if (!words || words.length === 0) {
-
-        const empty = document.createElement("span");
-
-        empty.className = "empty";
-        empty.textContent =
-            "Start typing to see word frequency.";
-
-        topWordsElement.appendChild(empty);
-
-        return;
-    }
-
-    words.forEach(item => {
-
-        const wordElement =
-            document.createElement("span");
-
-        wordElement.className = "word-frequency";
-
-        wordElement.innerHTML = `
-            <strong>${escapeHTML(item.word)}</strong>
-            <small>${item.count}</small>
-        `;
-
-        topWordsElement.appendChild(
-            wordElement
+                updateStatistics(
+                    analyzeText(
+                        textInput.value
+                    )
+                );
+            }
         );
-    });
-}
-
-// ============================================================
-// ESCAPE HTML
-// ============================================================
-
-function escapeHTML(value) {
-
-    const div =
-        document.createElement("div");
-
-    div.textContent = value;
-
-    return div.innerHTML;
-}
-
-// ============================================================
-// LIVE TEXT ANALYSIS
-// ============================================================
-
-if (textInput) {
-
-    textInput.addEventListener(
-        "input",
-        function () {
-
-            const text =
-                textInput.value;
-
-            const result =
-                analyzeText(text);
-
-            updateUI(result);
-
-            // Clear upload message when user types
-            if (text.trim() && uploadStatus) {
-                uploadStatus.textContent = "";
-            }
-        }
-    );
-}
-
-// ============================================================
-// CLEAR BUTTON
-// ============================================================
-
-if (clearButton) {
-
-    clearButton.addEventListener(
-        "click",
-        function () {
-
-            if (textInput) {
-                textInput.value = "";
-                textInput.focus();
-            }
-
-            currentAnalysis =
-                analyzeText("");
-
-            updateUI(currentAnalysis);
-
-            if (fileInput) {
-                fileInput.value = "";
-            }
-
-            if (uploadStatus) {
-                uploadStatus.textContent = "";
-            }
-        }
-    );
-}
-
-// ============================================================
-// COPY TEXT
-// ============================================================
-
-if (copyTextButton) {
-
-    copyTextButton.addEventListener(
-        "click",
-        async function () {
-
-            const text =
-                textInput?.value || "";
-
-            if (!text) {
-                showStatus(
-                    "There is no text to copy."
-                );
-                return;
-            }
-
-            try {
-
-                await navigator.clipboard.writeText(
-                    text
-                );
-
-                showStatus(
-                    "Text copied successfully."
-                );
-
-            } catch (error) {
-
-                showStatus(
-                    "Unable to copy text."
-                );
-            }
-        }
-    );
-}
-
-// ============================================================
-// FILE INPUT
-// ============================================================
-
-if (fileInput) {
-
-    fileInput.addEventListener(
-        "change",
-        function () {
-
-            if (fileInput.files.length > 0) {
-                uploadFile(
-                    fileInput.files[0]
-                );
-            }
-        }
-    );
-}
-
-// ============================================================
-// DRAG & DROP
-// ============================================================
-
-if (dropZone) {
-
-    dropZone.addEventListener(
-        "dragover",
-        function (event) {
-
-            event.preventDefault();
-
-            dropZone.classList.add(
-                "drag-over"
-            );
-        }
-    );
-
-    dropZone.addEventListener(
-        "dragleave",
-        function () {
-
-            dropZone.classList.remove(
-                "drag-over"
-            );
-        }
-    );
-
-    dropZone.addEventListener(
-        "drop",
-        function (event) {
-
-            event.preventDefault();
-
-            dropZone.classList.remove(
-                "drag-over"
-            );
-
-            const files =
-                event.dataTransfer.files;
-
-            if (files.length > 0) {
-                uploadFile(files[0]);
-            }
-        }
-    );
-}
-
-// ============================================================
-// UPLOAD FILE
-// ============================================================
-
-async function uploadFile(file) {
-
-    const allowedExtensions = [
-        ".pdf",
-        ".docx",
-        ".txt",
-        ".csv"
-    ];
-
-    const extension =
-        "." +
-        file.name
-            .split(".")
-            .pop()
-            .toLowerCase();
-
-    if (!allowedExtensions.includes(extension)) {
-
-        showStatus(
-            "Unsupported file. Use PDF, DOCX, TXT or CSV."
-        );
-
-        return;
     }
 
-    // 20 MB limit
-    if (
-        file.size >
-        20 * 1024 * 1024
-    ) {
+    // -----------------------------------------------------
+    // CLEAR
+    // -----------------------------------------------------
 
-        showStatus(
-            "File is larger than 20 MB."
-        );
+    if (clearButton) {
 
-        return;
-    }
+        clearButton.addEventListener(
+            "click",
+            () => {
 
-    showStatus(
-        `Analyzing ${file.name}...`
-    );
-
-    const formData =
-        new FormData();
-
-    formData.append(
-        "file",
-        file
-    );
-
-    try {
-
-        const response =
-            await fetch(
-                `${API_BASE}/api/analyze-file`,
-                {
-                    method: "POST",
-                    body: formData
+                if (textInput) {
+                    textInput.value = "";
                 }
-            );
 
-        const data =
-            await response.json();
-
-        if (!response.ok) {
-
-            throw new Error(
-                data.detail ||
-                "File analysis failed."
-            );
-        }
-
-        updateUI(data);
-
-        // Put extracted text into editor
-        if (
-            textInput &&
-            typeof data.text === "string"
-        ) {
-            textInput.value =
-                data.text;
-        }
-
-        showStatus(
-            `✓ ${file.name} analyzed successfully.`
-        );
-
-    } catch (error) {
-
-        console.error(
-            "Upload error:",
-            error
-        );
-
-        showStatus(
-            `Error: ${error.message}`
-        );
-    }
-}
-
-// ============================================================
-// STATUS MESSAGE
-// ============================================================
-
-function showStatus(message) {
-
-    if (!uploadStatus) {
-        return;
-    }
-
-    uploadStatus.textContent =
-        message;
-}
-
-// ============================================================
-// COPY RESULTS
-// ============================================================
-
-if (copyResultsButton) {
-
-    copyResultsButton.addEventListener(
-        "click",
-        async function () {
-
-            const resultText =
-                createReportText();
-
-            try {
-
-                await navigator.clipboard.writeText(
-                    resultText
+                updateStatistics(
+                    analyzeText("")
                 );
 
-                showStatus(
-                    "✓ Results copied successfully."
-                );
+                if (uploadStatus) {
+                    uploadStatus.textContent = "";
+                }
 
-            } catch (error) {
+                if (fileInput) {
+                    fileInput.value = "";
+                }
+            }
+        );
+    }
 
-                showStatus(
-                    "Unable to copy results."
+    // -----------------------------------------------------
+    // COPY TEXT
+    // -----------------------------------------------------
+
+    if (copyTextButton) {
+
+        copyTextButton.addEventListener(
+            "click",
+            async () => {
+
+                try {
+
+                    await navigator.clipboard.writeText(
+                        textInput
+                            ? textInput.value
+                            : ""
+                    );
+
+                    copyTextButton.textContent =
+                        "Copied!";
+
+                    setTimeout(() => {
+                        copyTextButton.textContent =
+                            "Copy Text";
+                    }, 1500);
+
+                } catch (error) {
+
+                    alert(
+                        "Unable to copy text."
+                    );
+                }
+            }
+        );
+    }
+
+    // -----------------------------------------------------
+    // FILE INPUT
+    // -----------------------------------------------------
+
+    if (fileInput) {
+
+        fileInput.addEventListener(
+            "change",
+            () => {
+
+                if (
+                    fileInput.files &&
+                    fileInput.files.length > 0
+                ) {
+                    uploadFile(
+                        fileInput.files[0]
+                    );
+                }
+            }
+        );
+    }
+
+    // -----------------------------------------------------
+    // DRAG & DROP
+    // -----------------------------------------------------
+
+    if (dropZone) {
+
+        dropZone.addEventListener(
+            "dragover",
+            event => {
+
+                event.preventDefault();
+
+                dropZone.classList.add(
+                    "drag-over"
                 );
             }
+        );
+
+        dropZone.addEventListener(
+            "dragleave",
+            () => {
+
+                dropZone.classList.remove(
+                    "drag-over"
+                );
+            }
+        );
+
+        dropZone.addEventListener(
+            "drop",
+            event => {
+
+                event.preventDefault();
+
+                dropZone.classList.remove(
+                    "drag-over"
+                );
+
+                const files =
+                    event.dataTransfer.files;
+
+                if (
+                    files &&
+                    files.length > 0
+                ) {
+                    uploadFile(files[0]);
+                }
+            }
+        );
+    }
+
+    // -----------------------------------------------------
+    // FILE UPLOAD
+    // -----------------------------------------------------
+
+    async function uploadFile(file) {
+
+        const allowed = [
+            ".pdf",
+            ".docx",
+            ".txt",
+            ".csv"
+        ];
+
+        const extension =
+            "." +
+            file.name
+                .split(".")
+                .pop()
+                .toLowerCase();
+
+        if (!allowed.includes(extension)) {
+
+            showUploadStatus(
+                "Unsupported file type.",
+                true
+            );
+
+            return;
         }
-    );
-}
 
-// ============================================================
-// CREATE REPORT
-// ============================================================
+        if (
+            file.size >
+            20 * 1024 * 1024
+        ) {
 
-function createReportText() {
+            showUploadStatus(
+                "File is larger than 20 MB.",
+                true
+            );
 
-    const topWords =
-        currentAnalysis.top_words || [];
+            return;
+        }
 
-    const topWordText =
-        topWords.length > 0
-            ? topWords
-                .map(
-                    item =>
-                        `${item.word}: ${item.count}`
-                )
-                .join(", ")
-            : "None";
+        showUploadStatus(
+            "Analyzing " +
+            file.name +
+            "..."
+        );
 
-    return `
-WordCounter Pro
-==============================
+        const formData =
+            new FormData();
 
-Words: ${currentAnalysis.words}
-Characters: ${currentAnalysis.characters}
-Characters Without Spaces: ${currentAnalysis.characters_no_spaces}
-Paragraphs: ${currentAnalysis.paragraphs}
-Sentences: ${currentAnalysis.sentences}
-Lines: ${currentAnalysis.lines}
-Unique Words: ${currentAnalysis.unique_words}
+        formData.append(
+            "file",
+            file
+        );
 
-Reading Time: ${currentAnalysis.reading_minutes} min
-Speaking Time: ${currentAnalysis.speaking_minutes} min
+        try {
 
-Average Word Length: ${currentAnalysis.average_word_length}
-Longest Word: ${currentAnalysis.longest_word || "—"}
-
-Most Used Words:
-${topWordText}
-
-==============================
-Generated by WordCounter Pro
-`.trim();
-}
-
-// ============================================================
-// DOWNLOAD REPORT
-// ============================================================
-
-if (downloadResultsButton) {
-
-    downloadResultsButton.addEventListener(
-        "click",
-        function () {
-
-            const report =
-                createReportText();
-
-            const blob =
-                new Blob(
-                    [report],
+            const response =
+                await fetch(
+                    "/api/analyze-file",
                     {
-                        type:
-                            "text/plain;charset=utf-8"
+                        method: "POST",
+                        body: formData
                     }
                 );
 
-            const url =
-                URL.createObjectURL(blob);
+            const result =
+                await response.json();
 
-            const link =
-                document.createElement("a");
+            if (!response.ok) {
 
-            link.href = url;
+                throw new Error(
+                    result.detail ||
+                    "File analysis failed."
+                );
+            }
 
-            link.download =
-                "WordCounter-Pro-Report.txt";
+            updateStatistics(result);
 
-            document.body.appendChild(link);
+            if (textInput) {
+                textInput.value =
+                    result.text || "";
+            }
 
-            link.click();
+            if (result.ocr_required) {
 
-            document.body.removeChild(link);
+                showUploadStatus(
+                    "This PDF appears to be scanned. OCR is required.",
+                    true
+                );
 
-            URL.revokeObjectURL(url);
+            } else {
+
+                showUploadStatus(
+                    "✓ " +
+                    file.name +
+                    " analyzed successfully"
+                );
+            }
+
+        } catch (error) {
+
+            console.error(
+                "Upload error:",
+                error
+            );
+
+            showUploadStatus(
+                error.message ||
+                "Unable to analyze file.",
+                true
+            );
         }
+    }
+
+    function showUploadStatus(
+        message,
+        error = false
+    ) {
+
+        if (!uploadStatus) return;
+
+        uploadStatus.textContent =
+            message;
+
+        uploadStatus.style.color =
+            error
+                ? "var(--danger)"
+                : "var(--accent)";
+    }
+
+    // -----------------------------------------------------
+    // CREATE REPORT
+    // -----------------------------------------------------
+
+    function createReport() {
+
+        const result =
+            analyzeText(
+                textInput
+                    ? textInput.value
+                    : ""
+            );
+
+        let report = "";
+
+        report +=
+            "WORDCOUNTER PRO\n";
+
+        report +=
+            "========================\n\n";
+
+        report +=
+            `Words: ${result.words}\n`;
+
+        report +=
+            `Characters: ${result.characters}\n`;
+
+        report +=
+            `Characters Without Spaces: ${result.characters_no_spaces}\n`;
+
+        report +=
+            `Paragraphs: ${result.paragraphs}\n`;
+
+        report +=
+            `Sentences: ${result.sentences}\n`;
+
+        report +=
+            `Lines: ${result.lines}\n`;
+
+        report +=
+            `Unique Words: ${result.unique_words}\n`;
+
+        report +=
+            `Reading Time: ${result.reading_minutes} min\n`;
+
+        report +=
+            `Speaking Time: ${result.speaking_minutes} min\n`;
+
+        report +=
+            `Average Word Length: ${result.average_word_length}\n`;
+
+        report +=
+            `Longest Word: ${
+                result.longest_word || "—"
+            }\n\n`;
+
+        report +=
+            "MOST USED WORDS\n";
+
+        report +=
+            "========================\n";
+
+        result.top_words.forEach(item => {
+
+            report +=
+                `${item.word}: ${item.count}\n`;
+        });
+
+        return report;
+    }
+
+    // -----------------------------------------------------
+    // COPY RESULTS
+    // -----------------------------------------------------
+
+    if (copyResults) {
+
+        copyResults.addEventListener(
+            "click",
+            async () => {
+
+                try {
+
+                    await navigator.clipboard.writeText(
+                        createReport()
+                    );
+
+                    copyResults.textContent =
+                        "✓ Copied";
+
+                    setTimeout(() => {
+
+                        copyResults.textContent =
+                            "📋 Copy Results";
+
+                    }, 1500);
+
+                } catch (error) {
+
+                    alert(
+                        "Unable to copy results."
+                    );
+                }
+            }
+        );
+    }
+
+    // -----------------------------------------------------
+    // DOWNLOAD REPORT
+    // -----------------------------------------------------
+
+    if (downloadResults) {
+
+        downloadResults.addEventListener(
+            "click",
+            () => {
+
+                const report =
+                    createReport();
+
+                const blob =
+                    new Blob(
+                        [report],
+                        {
+                            type:
+                                "text/plain;charset=utf-8"
+                        }
+                    );
+
+                const url =
+                    URL.createObjectURL(blob);
+
+                const link =
+                    document.createElement("a");
+
+                link.href = url;
+
+                link.download =
+                    "wordcounter-report.txt";
+
+                document.body.appendChild(link);
+
+                link.click();
+
+                link.remove();
+
+                URL.revokeObjectURL(url);
+            }
+        );
+    }
+
+    // -----------------------------------------------------
+    // INITIAL STATE
+    // -----------------------------------------------------
+
+    updateStatistics(
+        analyzeText("")
     );
-}
 
-// ============================================================
-// INITIAL STATE
-// ============================================================
-
-updateUI(
-    analyzeText("")
-);
-
-console.log(
-    "WordCounter Pro initialized successfully."
-);
+});

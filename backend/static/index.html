@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
 
     <meta
@@ -21,14 +22,57 @@
 
     <title>WordCounter Pro</title>
 
-    <!-- IMPORTANT: files are inside /static -->
+    <!-- =====================================================
+         THEME INITIALIZATION
+         Runs BEFORE the page is displayed.
+         This prevents dark/light mode flashing.
+    ====================================================== -->
+
+    <script>
+        (function () {
+
+            const savedTheme =
+                localStorage.getItem("wordcounter-theme");
+
+            if (
+                savedTheme === "light" ||
+                savedTheme === "dark"
+            ) {
+
+                document.documentElement.setAttribute(
+                    "data-theme",
+                    savedTheme
+                );
+
+            } else {
+
+                document.documentElement.setAttribute(
+                    "data-theme",
+                    "dark"
+                );
+            }
+
+        })();
+    </script>
+
+    <!-- =====================================================
+         STYLESHEET
+    ====================================================== -->
+
     <link
         rel="stylesheet"
         href="/static/style.css"
     >
+
 </head>
 
+
 <body>
+
+
+<!-- =====================================================
+     NAVBAR
+====================================================== -->
 
 <header class="navbar">
 
@@ -37,23 +81,36 @@
         <span class="logo-icon">✦</span>
 
         WordCounter
+
         <span>Pro</span>
 
     </div>
+
 
     <button
         id="themeButton"
         class="theme-button"
         type="button"
-        aria-label="Toggle dark mode"
+        aria-label="Switch to light mode"
+        title="Switch to light mode"
     >
-        🌙
+        ☀️
     </button>
 
 </header>
 
 
+
+<!-- =====================================================
+     MAIN
+====================================================== -->
+
 <main>
+
+
+<!-- =====================================================
+     HERO
+====================================================== -->
 
 <section class="hero">
 
@@ -61,25 +118,39 @@
         ⚡ FAST • ACCURATE • PRIVATE
     </div>
 
+
     <h1>
+
         Count words.
-        <span>Analyze everything.</span>
+
+        <span>
+            Analyze everything.
+        </span>
+
     </h1>
 
+
     <p>
+
         Type, paste, or upload your document
         and get detailed statistics instantly.
+
     </p>
 
 </section>
 
+
+
+<!-- =====================================================
+     MAIN CARD
+====================================================== -->
 
 <section class="main-card">
 
 
 <!-- =====================================================
      FILE UPLOAD
-===================================================== -->
+====================================================== -->
 
 <div
     id="dropZone"
@@ -90,15 +161,21 @@
         ↑
     </div>
 
+
     <h2>
         Drop your document here
     </h2>
+
 
     <p>
         or select a file from your computer
     </p>
 
-    <label class="upload-button">
+
+    <label
+        class="upload-button"
+        for="fileInput"
+    >
 
         Upload File
 
@@ -111,9 +188,11 @@
 
     </label>
 
+
     <small>
         PDF · DOCX · TXT · CSV · Maximum 20 MB
     </small>
+
 
     <div
         id="uploadStatus"
@@ -124,22 +203,34 @@
 </div>
 
 
+
+<!-- =====================================================
+     OR
+====================================================== -->
+
 <div class="or">
-    <span>OR</span>
+
+    <span>
+        OR
+    </span>
+
 </div>
+
 
 
 <!-- =====================================================
      TEXT EDITOR
-===================================================== -->
+====================================================== -->
 
 <div class="editor">
+
 
     <div class="editor-header">
 
         <strong>
             Text Editor
         </strong>
+
 
         <button
             id="clearButton"
@@ -151,17 +242,21 @@
 
     </div>
 
+
     <textarea
         id="textInput"
         placeholder="Start typing or paste your text here..."
         spellcheck="true"
+        aria-label="Text editor"
     ></textarea>
+
 
     <div class="editor-footer">
 
         <span>
             ⚡ Live analysis enabled
         </span>
+
 
         <button
             id="copyTextButton"
@@ -176,71 +271,150 @@
 </div>
 
 
+
 <!-- =====================================================
      STATISTICS
-===================================================== -->
+====================================================== -->
 
-<section class="statistics">
+<section
+    class="statistics"
+    aria-label="Text statistics"
+>
+
 
     <div class="stat-card">
-        <span>Words</span>
-        <strong id="words">0</strong>
+
+        <span>
+            Words
+        </span>
+
+        <strong id="words">
+            0
+        </strong>
+
     </div>
 
-    <div class="stat-card">
-        <span>Characters</span>
-        <strong id="characters">0</strong>
-    </div>
 
     <div class="stat-card">
-        <span>Characters Without Spaces</span>
-        <strong id="charactersNoSpaces">0</strong>
+
+        <span>
+            Characters
+        </span>
+
+        <strong id="characters">
+            0
+        </strong>
+
     </div>
 
-    <div class="stat-card">
-        <span>Paragraphs</span>
-        <strong id="paragraphs">0</strong>
-    </div>
 
     <div class="stat-card">
-        <span>Sentences</span>
-        <strong id="sentences">0</strong>
+
+        <span>
+            Characters Without Spaces
+        </span>
+
+        <strong id="charactersNoSpaces">
+            0
+        </strong>
+
     </div>
 
-    <div class="stat-card">
-        <span>Lines</span>
-        <strong id="lines">0</strong>
-    </div>
 
     <div class="stat-card">
-        <span>Unique Words</span>
-        <strong id="uniqueWords">0</strong>
+
+        <span>
+            Paragraphs
+        </span>
+
+        <strong id="paragraphs">
+            0
+        </strong>
+
     </div>
 
-    <div class="stat-card">
-        <span>Reading Time</span>
-        <strong id="readingTime">0 min</strong>
-    </div>
 
     <div class="stat-card">
-        <span>Speaking Time</span>
-        <strong id="speakingTime">0 min</strong>
+
+        <span>
+            Sentences
+        </span>
+
+        <strong id="sentences">
+            0
+        </strong>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <span>
+            Lines
+        </span>
+
+        <strong id="lines">
+            0
+        </strong>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <span>
+            Unique Words
+        </span>
+
+        <strong id="uniqueWords">
+            0
+        </strong>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <span>
+            Reading Time
+        </span>
+
+        <strong id="readingTime">
+            0 min
+        </strong>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <span>
+            Speaking Time
+        </span>
+
+        <strong id="speakingTime">
+            0 min
+        </strong>
+
     </div>
 
 </section>
 
 
+
 <!-- =====================================================
      ADVANCED ANALYSIS
-===================================================== -->
+====================================================== -->
 
 <section class="advanced">
+
 
     <div class="advanced-card">
 
         <h3>
             Word Analysis
         </h3>
+
 
         <div class="analysis-row">
 
@@ -253,6 +427,7 @@
             </strong>
 
         </div>
+
 
         <div class="analysis-row">
 
@@ -269,11 +444,13 @@
     </div>
 
 
+
     <div class="advanced-card">
 
         <h3>
             Most Used Words
         </h3>
+
 
         <div
             id="topWords"
@@ -291,27 +468,35 @@
 </section>
 
 
+
 <!-- =====================================================
      ACTIONS
-===================================================== -->
+====================================================== -->
 
 <div class="actions">
+
 
     <button
         id="copyResults"
         class="secondary-button"
         type="button"
     >
+
         📋 Copy Results
+
     </button>
+
 
     <button
         id="downloadResults"
         class="secondary-button"
         type="button"
     >
+
         ↓ Download Report
+
     </button>
+
 
 </div>
 
@@ -321,13 +506,25 @@
 </main>
 
 
+
+<!-- =====================================================
+     FOOTER
+====================================================== -->
+
 <footer>
+
     WordCounter Pro · Built for fast and accurate text analysis
+
 </footer>
 
 
-<!-- IMPORTANT: JavaScript is inside /static -->
+
+<!-- =====================================================
+     JAVASCRIPT
+====================================================== -->
+
 <script src="/static/app.js"></script>
+
 
 </body>
 
