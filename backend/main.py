@@ -6,23 +6,42 @@ from docx import Document
 import fitz
 import csv
 import re
+import os
 
 
 app = FastAPI(
     title="WordCounter Pro",
-    version="1.0"
+    version="1.1"
 )
 
 
-# Allow frontend to communicate with backend
+# =========================================================
+# CORS
+# =========================================================
+
+frontend_origin = os.getenv("FRONTEND_ORIGIN", "*")
+
+if frontend_origin == "*":
+    allowed_origins = ["*"]
+else:
+    allowed_origins = [
+        origin.strip()
+        for origin in frontend_origin.split(",")
+        if origin.strip()
+    ]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=allowed_origins,
+    allow_credentials=False,
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
+
+# =========================================================
+# CONFIGURATION
+# =========================================================
 
 MAX_FILE_SIZE = 20 * 1024 * 1024
 
@@ -34,9 +53,9 @@ SUPPORTED_FILES = {
 }
 
 
-# ---------------------------------------------------------
+# =========================================================
 # WORD ANALYSIS ENGINE
-# ---------------------------------------------------------
+# =========================================================
 
 def analyze_text(text: str):
 
@@ -51,63 +70,104 @@ def analyze_text(text: str):
         flags=re.UNICODE
     )
 
-    # Paragraph detection
+    # -----------------------------------------------------
+    # Paragraphs
+    # -----------------------------------------------------
+
     paragraphs = []
 
     if text.strip():
         paragraphs = [
-            p.strip()
-            for p in re.split(r"\n\s*\n+", text)
-            if p.strip()
+            paragraph.strip()
+            for paragraph in re.split(
+                r"\n\s*\n+",
+                text
+            )
+            if paragraph.strip()
         ]
 
-    # Sentence detection
-    sentences = re.findall(
-        r"[.!?。！？]+",
+    # -----------------------------------------------------
+    # Sentences
+    # -----------------------------------------------------
+
+    sentence_matches = re.findall(
+        r"[^.!?。！？]+[.!?。！？]+",
         text
     )
 
-    # Lines
-    lines = text.splitlines()
+    # Handle text without punctuation
+    if text.strip() and not sentence_matches:
+        sentence_count = 1
+    else:
+        sentence_count = len(sentence_matches)
 
+    # -----------------------------------------------------
+    # Lines
+    # -----------------------------------------------------
+
+    lines = [
+        line
+        for line in text.splitlines()
+        if line.strip()
+    ]
+
+    # -----------------------------------------------------
     # Characters
+    # -----------------------------------------------------
+
     characters = len(text)
 
-    # Characters without spaces
     characters_without_spaces = len(
         re.sub(r"\s", "", text)
     )
 
-    # Word count
+    # -----------------------------------------------------
+    # Words
+    # -----------------------------------------------------
+
     word_count = len(words)
 
+    # -----------------------------------------------------
     # Reading time
-    reading_time = (
+    # Average reading speed = 200 WPM
+    # -----------------------------------------------------
+
+    reading_minutes = (
         max(1, round(word_count / 200))
         if word_count > 0
         else 0
     )
 
+    # -----------------------------------------------------
     # Speaking time
-    speaking_time = (
+    # Average speaking speed = 130 WPM
+    # -----------------------------------------------------
+
+    speaking_minutes = (
         max(1, round(word_count / 130))
         if word_count > 0
         else 0
     )
 
+    # -----------------------------------------------------
     # Average word length
+    # -----------------------------------------------------
+
     if word_count > 0:
 
-        total_length = sum(
-            len(
-                re.sub(
-                    r"[^\w]",
-                    "",
-                    word,
-                    flags=re.UNICODE
-                )
+        clean_words = [
+            re.sub(
+                r"[^\w]",
+                "",
+                word,
+                flags=re.UNICODE
             )
             for word in words
+        ]
+
+        total_length = sum(
+            len(word)
+            for word in clean_words
         )
 
         average_word_length = round(
@@ -118,37 +178,57 @@ def analyze_text(text: str):
     else:
         average_word_length = 0
 
+    # -----------------------------------------------------
     # Unique words
-    unique_words = set(
+    # -----------------------------------------------------
+
+    normalized_words = [
         word.casefold()
         for word in words
-    )
+    ]
 
+    unique_words = set(normalized_words)
+
+    # -----------------------------------------------------
     # Word frequency
+    # -----------------------------------------------------
+
     frequency = {}
 
-    for word in words:
+    for word in normalized_words:
 
-        clean_word = word.casefold()
-
-        frequency[clean_word] = (
-            frequency.get(clean_word, 0) + 1
+        frequency[word] = (
+            frequency.get(word, 0) + 1
         )
 
-    # Top 10 words
     top_words = sorted(
         frequency.items(),
-        key=lambda x: (-x[1], x[0])
+        key=lambda item: (-item[1], item[0])
     )[:10]
 
+    # -----------------------------------------------------
     # Longest word
+    # -----------------------------------------------------
+
     longest_word = ""
 
     if words:
+
         longest_word = max(
             words,
-            key=len
+            key=lambda word: len(
+                re.sub(
+                    r"[^\w]",
+                    "",
+                    word,
+                    flags=re.UNICODE
+                )
+            )
         )
+
+    # -----------------------------------------------------
+    # Return result
+    # -----------------------------------------------------
 
     return {
 
@@ -163,7 +243,7 @@ def analyze_text(text: str):
             len(paragraphs),
 
         "sentences":
-            len(sentences),
+            sentence_count,
 
         "lines":
             len(lines),
@@ -172,10 +252,10 @@ def analyze_text(text: str):
             len(unique_words),
 
         "reading_minutes":
-            reading_time,
+            reading_minutes,
 
         "speaking_minutes":
-            speaking_time,
+            speaking_minutes,
 
         "average_word_length":
             average_word_length,
@@ -195,9 +275,9 @@ def analyze_text(text: str):
     }
 
 
-# ---------------------------------------------------------
-# PDF
-# ---------------------------------------------------------
+# =========================================================
+# PDF EXTRACTION
+# =========================================================
 
 def extract_pdf(data):
 
@@ -210,18 +290,25 @@ def extract_pdf(data):
 
     for page in document:
 
-        page_text = page.get_text("text")
+        page_text = page.get_text(
+            "text",
+            sort=True
+        )
 
         pages.append(page_text)
 
+    page_count = len(document)
+
     document.close()
 
-    return "\n\n".join(pages), len(pages)
+    text = "\n\n".join(pages)
+
+    return text, page_count
 
 
-# ---------------------------------------------------------
-# DOCX
-# ---------------------------------------------------------
+# =========================================================
+# DOCX EXTRACTION
+# =========================================================
 
 def extract_docx(data):
 
@@ -231,7 +318,7 @@ def extract_docx(data):
 
     content = []
 
-    # Paragraphs
+    # Normal paragraphs
     for paragraph in document.paragraphs:
 
         if paragraph.text.strip():
@@ -249,32 +336,60 @@ def extract_docx(data):
 
             for cell in row.cells:
 
-                row_text.append(
-                    cell.text
+                cell_text = cell.text.strip()
+
+                if cell_text:
+                    row_text.append(cell_text)
+
+            if row_text:
+
+                content.append(
+                    " ".join(row_text)
                 )
 
-            content.append(
-                " ".join(row_text)
-            )
+    # Headers
+    for section in document.sections:
+
+        for paragraph in section.header.paragraphs:
+
+            if paragraph.text.strip():
+
+                content.append(
+                    paragraph.text
+                )
+
+    # Footers
+    for section in document.sections:
+
+        for paragraph in section.footer.paragraphs:
+
+            if paragraph.text.strip():
+
+                content.append(
+                    paragraph.text
+                )
 
     return "\n".join(content), None
 
 
-# ---------------------------------------------------------
-# TXT
-# ---------------------------------------------------------
+# =========================================================
+# TXT EXTRACTION
+# =========================================================
 
 def extract_txt(data):
 
-    return data.decode(
-        "utf-8-sig",
-        errors="replace"
-    ), None
+    return (
+        data.decode(
+            "utf-8-sig",
+            errors="replace"
+        ),
+        None
+    )
 
 
-# ---------------------------------------------------------
-# CSV
-# ---------------------------------------------------------
+# =========================================================
+# CSV EXTRACTION
+# =========================================================
 
 def extract_csv(data):
 
@@ -292,28 +407,33 @@ def extract_csv(data):
     for row in rows:
 
         text.append(
-            " ".join(row)
+            " ".join(
+                cell.strip()
+                for cell in row
+                if cell.strip()
+            )
         )
 
     return "\n".join(text), None
 
 
-# ---------------------------------------------------------
+# =========================================================
 # HEALTH CHECK
-# ---------------------------------------------------------
+# =========================================================
 
 @app.get("/api/health")
 def health():
 
     return {
         "status": "online",
-        "service": "WordCounter Pro"
+        "service": "WordCounter Pro",
+        "version": "1.1"
     }
 
 
-# ---------------------------------------------------------
+# =========================================================
 # FILE ANALYSIS
-# ---------------------------------------------------------
+# =========================================================
 
 @app.post("/api/analyze-file")
 async def analyze_file(
@@ -326,20 +446,30 @@ async def analyze_file(
         filename
     ).suffix.lower()
 
-    # Check extension
+    # -----------------------------------------------------
+    # Check file type
+    # -----------------------------------------------------
+
     if extension not in SUPPORTED_FILES:
 
         raise HTTPException(
             status_code=400,
             detail=(
                 "Unsupported file type. "
-                "Supported: PDF, DOCX, TXT, CSV"
+                "Supported formats: PDF, DOCX, TXT, CSV."
             )
         )
 
+    # -----------------------------------------------------
+    # Read file
+    # -----------------------------------------------------
+
     data = await file.read()
 
-    # Check file size
+    # -----------------------------------------------------
+    # File size
+    # -----------------------------------------------------
+
     if len(data) > MAX_FILE_SIZE:
 
         raise HTTPException(
@@ -347,26 +477,33 @@ async def analyze_file(
             detail="File exceeds the 20 MB limit."
         )
 
+    if len(data) == 0:
+
+        raise HTTPException(
+            status_code=400,
+            detail="The uploaded file is empty."
+        )
+
+    # -----------------------------------------------------
+    # Extract text
+    # -----------------------------------------------------
+
     try:
 
         pages = None
 
-        # PDF
         if extension == ".pdf":
 
             text, pages = extract_pdf(data)
 
-        # DOCX
         elif extension == ".docx":
 
             text, pages = extract_docx(data)
 
-        # TXT
         elif extension == ".txt":
 
             text, pages = extract_txt(data)
 
-        # CSV
         elif extension == ".csv":
 
             text, pages = extract_csv(data)
@@ -375,20 +512,28 @@ async def analyze_file(
 
             text = ""
 
+        # -------------------------------------------------
+        # Analyze
+        # -------------------------------------------------
+
         result = analyze_text(text)
 
         result["filename"] = filename
 
-        result["file_type"] = extension.upper().replace(
-            ".",
-            ""
+        result["file_type"] = (
+            extension
+            .replace(".", "")
+            .upper()
         )
 
         result["file_size"] = len(data)
 
         result["pages"] = pages
 
-        # Detect scanned PDF
+        # -------------------------------------------------
+        # Scanned PDF detection
+        # -------------------------------------------------
+
         if (
             extension == ".pdf"
             and not text.strip()
@@ -406,5 +551,7 @@ async def analyze_file(
 
         raise HTTPException(
             status_code=422,
-            detail=f"Could not process file: {error}"
+            detail=(
+                f"Could not process file: {error}"
+            )
         )
