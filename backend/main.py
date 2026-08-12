@@ -1,41 +1,26 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
 from pathlib import Path
 from io import BytesIO
+
 from docx import Document
+
 import fitz
 import csv
 import re
 import os
 
 
+# =========================================================
+# APPLICATION
+# =========================================================
+
 app = FastAPI(
     title="WordCounter Pro",
-    version="1.1"
-)
-
-
-# =========================================================
-# CORS
-# =========================================================
-
-frontend_origin = os.getenv("FRONTEND_ORIGIN", "*")
-
-if frontend_origin == "*":
-    allowed_origins = ["*"]
-else:
-    allowed_origins = [
-        origin.strip()
-        for origin in frontend_origin.split(",")
-        if origin.strip()
-    ]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    version="2.0"
 )
 
 
@@ -54,21 +39,67 @@ SUPPORTED_FILES = {
 
 
 # =========================================================
+# CORS
+# =========================================================
+
+frontend_origin = os.getenv(
+    "FRONTEND_ORIGIN",
+    "*"
+)
+
+if frontend_origin == "*":
+
+    allowed_origins = ["*"]
+
+else:
+
+    allowed_origins = [
+        origin.strip()
+        for origin in frontend_origin.split(",")
+        if origin.strip()
+    ]
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# =========================================================
 # WORD ANALYSIS ENGINE
 # =========================================================
 
 def analyze_text(text: str):
 
+    # -----------------------------------------------------
     # Normalize line endings
+    # -----------------------------------------------------
+
     text = text.replace("\r\n", "\n")
     text = text.replace("\r", "\n")
 
+
+    # -----------------------------------------------------
     # Unicode-aware word detection
+    # -----------------------------------------------------
+
     words = re.findall(
         r"[^\W_]+(?:['’\-][^\W_]+)*",
         text,
         flags=re.UNICODE
     )
+
+
+    # -----------------------------------------------------
+    # Trimmed text
+    # -----------------------------------------------------
+
+    trimmed_text = text.strip()
+
 
     # -----------------------------------------------------
     # Paragraphs
@@ -76,15 +107,17 @@ def analyze_text(text: str):
 
     paragraphs = []
 
-    if text.strip():
+    if trimmed_text:
+
         paragraphs = [
             paragraph.strip()
             for paragraph in re.split(
                 r"\n\s*\n+",
-                text
+                trimmed_text
             )
             if paragraph.strip()
         ]
+
 
     # -----------------------------------------------------
     # Sentences
@@ -92,24 +125,44 @@ def analyze_text(text: str):
 
     sentence_matches = re.findall(
         r"[^.!?。！？]+[.!?。！？]+",
-        text
+        trimmed_text
     )
 
-    # Handle text without punctuation
-    if text.strip() and not sentence_matches:
-        sentence_count = 1
+
+    if trimmed_text:
+
+        if sentence_matches:
+
+            sentence_count = len(
+                sentence_matches
+            )
+
+        else:
+
+            # Text exists but contains no punctuation.
+            sentence_count = 1
+
     else:
-        sentence_count = len(sentence_matches)
+
+        sentence_count = 0
+
 
     # -----------------------------------------------------
     # Lines
     # -----------------------------------------------------
 
-    lines = [
-        line
-        for line in text.splitlines()
-        if line.strip()
-    ]
+    if text:
+
+        lines = [
+            line
+            for line in text.splitlines()
+            if line.strip()
+        ]
+
+    else:
+
+        lines = []
+
 
     # -----------------------------------------------------
     # Characters
@@ -118,36 +171,58 @@ def analyze_text(text: str):
     characters = len(text)
 
     characters_without_spaces = len(
-        re.sub(r"\s", "", text)
+        re.sub(
+            r"\s",
+            "",
+            text
+        )
     )
 
+
     # -----------------------------------------------------
-    # Words
+    # Word count
     # -----------------------------------------------------
 
     word_count = len(words)
+
 
     # -----------------------------------------------------
     # Reading time
     # Average reading speed = 200 WPM
     # -----------------------------------------------------
 
-    reading_minutes = (
-        max(1, round(word_count / 200))
-        if word_count > 0
-        else 0
-    )
+    if word_count > 0:
+
+        reading_minutes = max(
+            1,
+            round(
+                word_count / 200
+            )
+        )
+
+    else:
+
+        reading_minutes = 0
+
 
     # -----------------------------------------------------
     # Speaking time
     # Average speaking speed = 130 WPM
     # -----------------------------------------------------
 
-    speaking_minutes = (
-        max(1, round(word_count / 130))
-        if word_count > 0
-        else 0
-    )
+    if word_count > 0:
+
+        speaking_minutes = max(
+            1,
+            round(
+                word_count / 130
+            )
+        )
+
+    else:
+
+        speaking_minutes = 0
+
 
     # -----------------------------------------------------
     # Average word length
@@ -176,10 +251,12 @@ def analyze_text(text: str):
         )
 
     else:
+
         average_word_length = 0
 
+
     # -----------------------------------------------------
-    # Unique words
+    # Normalize words
     # -----------------------------------------------------
 
     normalized_words = [
@@ -187,7 +264,15 @@ def analyze_text(text: str):
         for word in words
     ]
 
-    unique_words = set(normalized_words)
+
+    # -----------------------------------------------------
+    # Unique words
+    # -----------------------------------------------------
+
+    unique_words = set(
+        normalized_words
+    )
+
 
     # -----------------------------------------------------
     # Word frequency
@@ -201,10 +286,19 @@ def analyze_text(text: str):
             frequency.get(word, 0) + 1
         )
 
+
+    # -----------------------------------------------------
+    # Top 10 words
+    # -----------------------------------------------------
+
     top_words = sorted(
         frequency.items(),
-        key=lambda item: (-item[1], item[0])
+        key=lambda item: (
+            -item[1],
+            item[0]
+        )
     )[:10]
+
 
     # -----------------------------------------------------
     # Longest word
@@ -226,8 +320,9 @@ def analyze_text(text: str):
             )
         )
 
+
     # -----------------------------------------------------
-    # Return result
+    # Return analysis
     # -----------------------------------------------------
 
     return {
@@ -279,78 +374,67 @@ def analyze_text(text: str):
 # PDF EXTRACTION
 # =========================================================
 
-def extract_pdf(data):
+def extract_pdf(data: bytes):
 
-    document = fitz.open(
-        stream=data,
-        filetype="pdf"
-    )
+    try:
 
-    pages = []
-
-    for page in document:
-
-        page_text = page.get_text(
-            "text",
-            sort=True
+        document = fitz.open(
+            stream=data,
+            filetype="pdf"
         )
 
-        pages.append(page_text)
+        pages = []
 
-    page_count = len(document)
+        for page in document:
 
-    document.close()
+            page_text = page.get_text(
+                "text",
+                sort=True
+            )
 
-    text = "\n\n".join(pages)
+            pages.append(
+                page_text
+            )
 
-    return text, page_count
+        page_count = len(
+            document
+        )
+
+        document.close()
+
+        text = "\n\n".join(
+            pages
+        )
+
+        return text, page_count
+
+    except Exception as error:
+
+        raise ValueError(
+            f"Unable to read PDF: {error}"
+        )
 
 
 # =========================================================
 # DOCX EXTRACTION
 # =========================================================
 
-def extract_docx(data):
+def extract_docx(data: bytes):
 
-    document = Document(
-        BytesIO(data)
-    )
+    try:
 
-    content = []
+        document = Document(
+            BytesIO(data)
+        )
 
-    # Normal paragraphs
-    for paragraph in document.paragraphs:
+        content = []
 
-        if paragraph.text.strip():
 
-            content.append(
-                paragraph.text
-            )
+        # -------------------------------------------------
+        # Normal paragraphs
+        # -------------------------------------------------
 
-    # Tables
-    for table in document.tables:
-
-        for row in table.rows:
-
-            row_text = []
-
-            for cell in row.cells:
-
-                cell_text = cell.text.strip()
-
-                if cell_text:
-                    row_text.append(cell_text)
-
-            if row_text:
-
-                content.append(
-                    " ".join(row_text)
-                )
-
-    # Headers
-    for section in document.sections:
-
-        for paragraph in section.header.paragraphs:
+        for paragraph in document.paragraphs:
 
             if paragraph.text.strip():
 
@@ -358,25 +442,86 @@ def extract_docx(data):
                     paragraph.text
                 )
 
-    # Footers
-    for section in document.sections:
 
-        for paragraph in section.footer.paragraphs:
+        # -------------------------------------------------
+        # Tables
+        # -------------------------------------------------
 
-            if paragraph.text.strip():
+        for table in document.tables:
 
-                content.append(
-                    paragraph.text
-                )
+            for row in table.rows:
 
-    return "\n".join(content), None
+                row_text = []
+
+                for cell in row.cells:
+
+                    cell_text = (
+                        cell.text.strip()
+                    )
+
+                    if cell_text:
+
+                        row_text.append(
+                            cell_text
+                        )
+
+                if row_text:
+
+                    content.append(
+                        " ".join(row_text)
+                    )
+
+
+        # -------------------------------------------------
+        # Headers
+        # -------------------------------------------------
+
+        for section in document.sections:
+
+            for paragraph in (
+                section.header.paragraphs
+            ):
+
+                if paragraph.text.strip():
+
+                    content.append(
+                        paragraph.text
+                    )
+
+
+        # -------------------------------------------------
+        # Footers
+        # -------------------------------------------------
+
+        for section in document.sections:
+
+            for paragraph in (
+                section.footer.paragraphs
+            ):
+
+                if paragraph.text.strip():
+
+                    content.append(
+                        paragraph.text
+                    )
+
+
+        return "\n".join(
+            content
+        ), None
+
+    except Exception as error:
+
+        raise ValueError(
+            f"Unable to read DOCX: {error}"
+        )
 
 
 # =========================================================
 # TXT EXTRACTION
 # =========================================================
 
-def extract_txt(data):
+def extract_txt(data: bytes):
 
     return (
         data.decode(
@@ -391,7 +536,7 @@ def extract_txt(data):
 # CSV EXTRACTION
 # =========================================================
 
-def extract_csv(data):
+def extract_csv(data: bytes):
 
     decoded = data.decode(
         "utf-8-sig",
@@ -406,28 +551,39 @@ def extract_csv(data):
 
     for row in rows:
 
-        text.append(
-            " ".join(
-                cell.strip()
-                for cell in row
-                if cell.strip()
-            )
-        )
+        cleaned_row = [
+            cell.strip()
+            for cell in row
+            if cell.strip()
+        ]
 
-    return "\n".join(text), None
+        if cleaned_row:
+
+            text.append(
+                " ".join(
+                    cleaned_row
+                )
+            )
+
+    return (
+        "\n".join(text),
+        None
+    )
 
 
 # =========================================================
 # HEALTH CHECK
 # =========================================================
 
-@app.get("/api/health")
+@app.get(
+    "/api/health"
+)
 def health():
 
     return {
         "status": "online",
         "service": "WordCounter Pro",
-        "version": "1.1"
+        "version": "2.0"
     }
 
 
@@ -435,19 +591,30 @@ def health():
 # FILE ANALYSIS
 # =========================================================
 
-@app.post("/api/analyze-file")
+@app.post(
+    "/api/analyze-file"
+)
 async def analyze_file(
     file: UploadFile = File(...)
 ):
 
-    filename = file.filename or "document"
+    filename = (
+        file.filename
+        or "document"
+    )
+
+
+    # -----------------------------------------------------
+    # File extension
+    # -----------------------------------------------------
 
     extension = Path(
         filename
     ).suffix.lower()
 
+
     # -----------------------------------------------------
-    # Check file type
+    # Validate file type
     # -----------------------------------------------------
 
     if extension not in SUPPORTED_FILES:
@@ -456,9 +623,11 @@ async def analyze_file(
             status_code=400,
             detail=(
                 "Unsupported file type. "
-                "Supported formats: PDF, DOCX, TXT, CSV."
+                "Supported formats: "
+                "PDF, DOCX, TXT, CSV."
             )
         )
+
 
     # -----------------------------------------------------
     # Read file
@@ -466,16 +635,25 @@ async def analyze_file(
 
     data = await file.read()
 
+
     # -----------------------------------------------------
-    # File size
+    # Validate file size
     # -----------------------------------------------------
 
     if len(data) > MAX_FILE_SIZE:
 
         raise HTTPException(
             status_code=413,
-            detail="File exceeds the 20 MB limit."
+            detail=(
+                "File exceeds the "
+                "20 MB limit."
+            )
         )
+
+
+    # -----------------------------------------------------
+    # Empty file
+    # -----------------------------------------------------
 
     if len(data) == 0:
 
@@ -483,6 +661,7 @@ async def analyze_file(
             status_code=400,
             detail="The uploaded file is empty."
         )
+
 
     # -----------------------------------------------------
     # Extract text
@@ -492,46 +671,73 @@ async def analyze_file(
 
         pages = None
 
+
         if extension == ".pdf":
 
-            text, pages = extract_pdf(data)
+            text, pages = extract_pdf(
+                data
+            )
+
 
         elif extension == ".docx":
 
-            text, pages = extract_docx(data)
+            text, pages = extract_docx(
+                data
+            )
+
 
         elif extension == ".txt":
 
-            text, pages = extract_txt(data)
+            text, pages = extract_txt(
+                data
+            )
+
 
         elif extension == ".csv":
 
-            text, pages = extract_csv(data)
+            text, pages = extract_csv(
+                data
+            )
+
 
         else:
 
             text = ""
 
+
         # -------------------------------------------------
-        # Analyze
+        # Analyze extracted text
         # -------------------------------------------------
 
-        result = analyze_text(text)
+        result = analyze_text(
+            text
+        )
+
+
+        # -------------------------------------------------
+        # File information
+        # -------------------------------------------------
 
         result["filename"] = filename
 
         result["file_type"] = (
             extension
-            .replace(".", "")
+            .replace(
+                ".",
+                ""
+            )
             .upper()
         )
 
-        result["file_size"] = len(data)
+        result["file_size"] = len(
+            data
+        )
 
         result["pages"] = pages
 
+
         # -------------------------------------------------
-        # Scanned PDF detection
+        # OCR detection
         # -------------------------------------------------
 
         if (
@@ -545,13 +751,63 @@ async def analyze_file(
 
             result["ocr_required"] = False
 
+
         return result
+
+
+    except HTTPException:
+
+        raise
+
 
     except Exception as error:
 
         raise HTTPException(
             status_code=422,
             detail=(
-                f"Could not process file: {error}"
+                f"Could not process file: "
+                f"{error}"
             )
         )
+
+
+# =========================================================
+# SERVE FRONTEND
+# =========================================================
+
+STATIC_DIR = Path(
+    __file__
+).parent / "static"
+
+
+if not STATIC_DIR.exists():
+
+    raise RuntimeError(
+        f"Static directory not found: {STATIC_DIR}"
+    )
+
+
+app.mount(
+    "/static",
+    StaticFiles(
+        directory=str(
+            STATIC_DIR
+        )
+    ),
+    name="static"
+)
+
+
+# =========================================================
+# HOME PAGE
+# =========================================================
+
+@app.get(
+    "/",
+    include_in_schema=False
+)
+async def homepage():
+
+    return FileResponse(
+        STATIC_DIR / "index.html"
+    )
