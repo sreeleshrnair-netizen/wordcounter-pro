@@ -1,76 +1,40 @@
+// ============================================================
+// WordCounter Pro - Frontend
+// ============================================================
+
 "use strict";
 
-/*
-=========================================================
-WORDCOUNTER PRO
-Frontend Application
-=========================================================
 
-Backend endpoint expected:
-
-POST /api/analyze-file
-
-The frontend and backend are served from the same domain,
-so we use relative API URLs.
-
-Supported files:
-PDF
-DOCX
-TXT
-CSV
-
-Maximum file size:
-20 MB
-=========================================================
-*/
-
-
-/* ======================================================
-   CONFIGURATION
-====================================================== */
-
-const CONFIG = {
-    API_ENDPOINT: "/api/analyze-file",
-    MAX_FILE_SIZE: 20 * 1024 * 1024,
-
-    SUPPORTED_EXTENSIONS: [
-        ".pdf",
-        ".docx",
-        ".txt",
-        ".csv"
-    ],
-
-    READING_WPM: 200,
-    SPEAKING_WPM: 130,
-
-    LIVE_ANALYSIS_DELAY: 120
-};
-
-
-/* ======================================================
-   DOM ELEMENTS
-====================================================== */
+// ============================================================
+// DOM ELEMENTS
+// ============================================================
 
 const textInput = document.getElementById("textInput");
 const fileInput = document.getElementById("fileInput");
 const dropZone = document.getElementById("dropZone");
 
+const themeButton = document.getElementById("themeButton");
 const clearButton = document.getElementById("clearButton");
 const copyTextButton = document.getElementById("copyTextButton");
 
 const copyResultsButton = document.getElementById("copyResults");
-const downloadResultsButton = document.getElementById("downloadResults");
+const downloadResultsButton =
+    document.getElementById("downloadResults");
 
-const themeButton = document.getElementById("themeButton");
-const uploadStatus = document.getElementById("uploadStatus");
+const uploadStatus =
+    document.getElementById("uploadStatus");
 
 
-/* ======================================================
-   STATISTICS ELEMENTS
-====================================================== */
+// ============================================================
+// STATISTICS ELEMENTS
+// ============================================================
 
-const wordsElement = document.getElementById("words");
-const charactersElement = document.getElementById("characters");
+const wordsElement =
+    document.getElementById("words");
+
+const charactersElement =
+    document.getElementById("characters");
+
 const charactersNoSpacesElement =
     document.getElementById("charactersNoSpaces");
 
@@ -102,301 +66,319 @@ const topWordsElement =
     document.getElementById("topWords");
 
 
-/* ======================================================
-   STATE
-====================================================== */
+// ============================================================
+// DARK MODE
+// ============================================================
 
-let currentAnalysis = null;
-
-let analysisTimer = null;
-
-let isUploading = false;
+const THEME_KEY = "wordcounter-theme";
 
 
-/* ======================================================
-   INITIALIZATION
-====================================================== */
+function applyTheme(theme) {
 
-document.addEventListener("DOMContentLoaded", () => {
+    if (theme === "dark") {
 
-    initializeTheme();
+        document.body.classList.add("dark-mode");
 
-    initializeEditor();
+        if (themeButton) {
+            themeButton.textContent = "☀️";
+            themeButton.setAttribute(
+                "aria-label",
+                "Switch to light mode"
+            );
+            themeButton.title = "Light mode";
+        }
 
-    initializeFileUpload();
+    } else {
 
-    initializeButtons();
+        document.body.classList.remove("dark-mode");
 
-    updateStatistics(analyzeText(textInput.value));
-
-});
-
-
-/* ======================================================
-   EDITOR
-====================================================== */
-
-function initializeEditor() {
-
-    if (!textInput) {
-        return;
+        if (themeButton) {
+            themeButton.textContent = "🌙";
+            themeButton.setAttribute(
+                "aria-label",
+                "Switch to dark mode"
+            );
+            themeButton.title = "Dark mode";
+        }
     }
-
-    textInput.addEventListener("input", () => {
-
-        clearTimeout(analysisTimer);
-
-        analysisTimer = setTimeout(() => {
-
-            const result = analyzeText(textInput.value);
-
-            updateStatistics(result);
-
-        }, CONFIG.LIVE_ANALYSIS_DELAY);
-
-    });
-
 }
 
 
-/* ======================================================
-   LOCAL TEXT ANALYSIS
-====================================================== */
+function initializeTheme() {
+
+    const savedTheme =
+        localStorage.getItem(THEME_KEY);
+
+    if (savedTheme === "dark") {
+
+        applyTheme("dark");
+
+    } else {
+
+        applyTheme("light");
+    }
+}
+
+
+if (themeButton) {
+
+    themeButton.addEventListener(
+        "click",
+        function () {
+
+            const isDark =
+                document.body.classList.contains(
+                    "dark-mode"
+                );
+
+            const newTheme =
+                isDark ? "light" : "dark";
+
+            applyTheme(newTheme);
+
+            localStorage.setItem(
+                THEME_KEY,
+                newTheme
+            );
+        }
+    );
+}
+
+
+initializeTheme();
+
+
+// ============================================================
+// LOCAL TEXT ANALYSIS
+// ============================================================
 
 function analyzeText(text) {
 
-    if (typeof text !== "string") {
-        text = "";
+    if (!text) {
+
+        return {
+            words: 0,
+            characters: 0,
+            characters_no_spaces: 0,
+            paragraphs: 0,
+            sentences: 0,
+            lines: 0,
+            unique_words: 0,
+            reading_minutes: 0,
+            speaking_minutes: 0,
+            average_word_length: 0,
+            longest_word: "",
+            top_words: []
+        };
     }
 
-    /*
-    Normalize line endings.
-    */
 
     text = text
         .replace(/\r\n/g, "\n")
         .replace(/\r/g, "\n");
 
 
-    /*
-    Unicode-aware word detection.
-
-    Supports:
-    English
-    accented words
-    apostrophes
-    hyphenated words
-    Unicode letters/numbers
-    */
+    // --------------------------------------------------------
+    // WORDS
+    // --------------------------------------------------------
 
     const words = text.match(
         /[^\W_]+(?:['’\-][^\W_]+)*/gu
     ) || [];
 
 
-    /*
-    Character count.
-    */
+    // --------------------------------------------------------
+    // CHARACTERS
+    // --------------------------------------------------------
 
-    const characters = text.length;
+    const characters =
+        text.length;
 
-
-    /*
-    Characters excluding whitespace.
-    */
 
     const charactersNoSpaces =
         text.replace(/\s/g, "").length;
 
 
-    /*
-    Paragraph count.
+    // --------------------------------------------------------
+    // PARAGRAPHS
+    // --------------------------------------------------------
 
-    A paragraph is separated by one or more blank lines.
-    */
-
-    const trimmedText = text.trim();
-
-    let paragraphs = 0;
-
-    if (trimmedText.length > 0) {
-
-        paragraphs = trimmedText
-            .split(/\n\s*\n+/)
-            .filter(paragraph => paragraph.trim().length > 0)
-            .length;
-
-    }
+    const paragraphs =
+        text.trim()
+            ? text
+                .trim()
+                .split(/\n\s*\n+/)
+                .filter(p => p.trim())
+                .length
+            : 0;
 
 
-    /*
-    Sentence detection.
+    // --------------------------------------------------------
+    // SENTENCES
+    // --------------------------------------------------------
 
-    Handles:
-    .
-    !
-    ?
-    Unicode equivalents.
-    */
+    const sentenceMatches =
+        text.match(
+            /[^.!?。！？]+[.!?。！？]+/g
+        ) || [];
+
 
     let sentences = 0;
 
-    if (trimmedText.length > 0) {
+    if (text.trim()) {
 
-        const sentenceMatches =
-            trimmedText.match(
-                /[^.!?。！？]*[.!?。！？]+(?=\s|$)/gu
-            );
-
-        sentences = sentenceMatches
-            ? sentenceMatches.length
-            : 1;
+        sentences =
+            sentenceMatches.length > 0
+                ? sentenceMatches.length
+                : 1;
     }
 
 
-    /*
-    Lines.
-    */
+    // --------------------------------------------------------
+    // LINES
+    // --------------------------------------------------------
 
-    let lines = 0;
+    const lines =
+        text
+            .split("\n")
+            .filter(
+                line => line.trim().length > 0
+            )
+            .length;
 
-    if (text.length > 0) {
 
-        lines = text.split("\n").length;
+    // --------------------------------------------------------
+    // UNIQUE WORDS
+    // --------------------------------------------------------
 
-    }
-
-
-    /*
-    Unique words.
-    */
-
-    const frequency = new Map();
-
-    for (const word of words) {
-
-        const normalizedWord =
-            word.toLocaleLowerCase();
-
-        frequency.set(
-            normalizedWord,
-            (frequency.get(normalizedWord) || 0) + 1
+    const normalizedWords =
+        words.map(
+            word => word.toLocaleLowerCase()
         );
 
-    }
+
+    const uniqueSet =
+        new Set(normalizedWords);
 
 
-    /*
-    Average word length.
-    */
+    // --------------------------------------------------------
+    // FREQUENCY
+    // --------------------------------------------------------
 
-    let averageWordLength = 0;
+    const frequency = {};
 
-    if (words.length > 0) {
 
-        let totalLength = 0;
+    normalizedWords.forEach(
+        word => {
 
-        for (const word of words) {
-
-            totalLength += word
-                .replace(/[^\p{L}\p{N}]/gu, "")
-                .length;
-
+            frequency[word] =
+                (frequency[word] || 0) + 1;
         }
-
-        averageWordLength =
-            totalLength / words.length;
-
-    }
+    );
 
 
-    /*
-    Longest word.
-    */
+    const topWords =
+        Object.entries(frequency)
+            .sort(
+                (a, b) => {
+
+                    if (b[1] !== a[1]) {
+                        return b[1] - a[1];
+                    }
+
+                    return a[0]
+                        .localeCompare(b[0]);
+                }
+            )
+            .slice(0, 10)
+            .map(
+                item => ({
+                    word: item[0],
+                    count: item[1]
+                })
+            );
+
+
+    // --------------------------------------------------------
+    // LONGEST WORD
+    // --------------------------------------------------------
 
     let longestWord = "";
 
     if (words.length > 0) {
 
-        longestWord = words.reduce(
-            (longest, current) => {
+        longestWord =
+            words.reduce(
+                (longest, current) => {
 
-                const longestClean =
-                    longest.replace(
-                        /[^\p{L}\p{N}]/gu,
-                        ""
-                    );
-
-                const currentClean =
-                    current.replace(
-                        /[^\p{L}\p{N}]/gu,
-                        ""
-                    );
-
-                return currentClean.length >
-                    longestClean.length
-                    ? current
-                    : longest;
-
-            }
-        );
-
+                    return current.length >
+                        longest.length
+                        ? current
+                        : longest;
+                }
+            );
     }
 
 
-    /*
-    Top 10 words.
-    */
+    // --------------------------------------------------------
+    // AVERAGE WORD LENGTH
+    // --------------------------------------------------------
 
-    const topWords = Array.from(
-        frequency.entries()
-    )
-        .sort((a, b) => {
+    let totalLength = 0;
 
-            if (b[1] !== a[1]) {
-                return b[1] - a[1];
-            }
+    words.forEach(
+        word => {
 
-            return a[0].localeCompare(b[0]);
+            const clean =
+                word.replace(
+                    /[^\p{L}\p{N}]/gu,
+                    ""
+                );
 
-        })
-        .slice(0, 10)
-        .map(([word, count]) => ({
-            word,
-            count
-        }));
+            totalLength +=
+                clean.length;
+        }
+    );
 
 
-    /*
-    Reading time.
-
-    We display seconds for very short text and
-    minutes for longer text.
-    */
-
-    const readingSeconds =
+    const averageWordLength =
         words.length > 0
-            ? Math.ceil(
-                (words.length / CONFIG.READING_WPM) * 60
+            ? Number(
+                (
+                    totalLength /
+                    words.length
+                ).toFixed(2)
             )
             : 0;
 
 
-    /*
-    Speaking time.
-    */
+    // --------------------------------------------------------
+    // TIME
+    // --------------------------------------------------------
 
-    const speakingSeconds =
+    const readingMinutes =
         words.length > 0
-            ? Math.ceil(
-                (words.length / CONFIG.SPEAKING_WPM) * 60
+            ? Math.max(
+                1,
+                Math.round(
+                    words.length / 200
+                )
+            )
+            : 0;
+
+
+    const speakingMinutes =
+        words.length > 0
+            ? Math.max(
+                1,
+                Math.round(
+                    words.length / 130
+                )
             )
             : 0;
 
 
     return {
-
-        text,
 
         words: words.length,
 
@@ -412,34 +394,16 @@ function analyzeText(text) {
         lines,
 
         unique_words:
-            frequency.size,
-
-        reading_seconds:
-            readingSeconds,
-
-        speaking_seconds:
-            speakingSeconds,
+            uniqueSet.size,
 
         reading_minutes:
-            words.length > 0
-                ? Math.ceil(
-                    words.length /
-                    CONFIG.READING_WPM
-                )
-                : 0,
+            readingMinutes,
 
         speaking_minutes:
-            words.length > 0
-                ? Math.ceil(
-                    words.length /
-                    CONFIG.SPEAKING_WPM
-                )
-                : 0,
+            speakingMinutes,
 
         average_word_length:
-            Number(
-                averageWordLength.toFixed(2)
-            ),
+            averageWordLength,
 
         longest_word:
             longestWord,
@@ -447,315 +411,327 @@ function analyzeText(text) {
         top_words:
             topWords
     };
-
 }
 
 
-/* ======================================================
-   UPDATE STATISTICS UI
-====================================================== */
+// ============================================================
+// UPDATE UI
+// ============================================================
 
 function updateStatistics(result) {
 
-    if (!result) {
-        return;
-    }
+    wordsElement.textContent =
+        result.words ?? 0;
 
-    currentAnalysis = result;
+    charactersElement.textContent =
+        result.characters ?? 0;
 
+    charactersNoSpacesElement.textContent =
+        result.characters_no_spaces ?? 0;
 
-    setText(
-        wordsElement,
-        formatNumber(result.words)
-    );
+    paragraphsElement.textContent =
+        result.paragraphs ?? 0;
 
-    setText(
-        charactersElement,
-        formatNumber(result.characters)
-    );
+    sentencesElement.textContent =
+        result.sentences ?? 0;
 
-    setText(
-        charactersNoSpacesElement,
-        formatNumber(result.characters_no_spaces)
-    );
+    linesElement.textContent =
+        result.lines ?? 0;
 
-    setText(
-        paragraphsElement,
-        formatNumber(result.paragraphs)
-    );
+    uniqueWordsElement.textContent =
+        result.unique_words ?? 0;
 
-    setText(
-        sentencesElement,
-        formatNumber(result.sentences)
-    );
+    readingTimeElement.textContent =
+        `${result.reading_minutes ?? 0} min`;
 
-    setText(
-        linesElement,
-        formatNumber(result.lines)
-    );
+    speakingTimeElement.textContent =
+        `${result.speaking_minutes ?? 0} min`;
 
-    setText(
-        uniqueWordsElement,
-        formatNumber(result.unique_words)
-    );
+    averageWordElement.textContent =
+        result.average_word_length ?? 0;
+
+    longestWordElement.textContent =
+        result.longest_word || "—";
 
 
-    /*
-    Reading time.
-    */
-
-    setText(
-        readingTimeElement,
-        formatDuration(
-            result.reading_seconds
-        )
-    );
-
-
-    /*
-    Speaking time.
-    */
-
-    setText(
-        speakingTimeElement,
-        formatDuration(
-            result.speaking_seconds
-        )
-    );
-
-
-    /*
-    Average word length.
-    */
-
-    setText(
-        averageWordElement,
-        result.average_word_length
-            ? result.average_word_length.toFixed(2)
-            : "0"
-    );
-
-
-    /*
-    Longest word.
-    */
-
-    setText(
-        longestWordElement,
-        result.longest_word || "—"
-    );
-
-
-    /*
-    Most used words.
-    */
-
-    renderTopWords(
-        result.top_words
-    );
-
-}
-
-
-/* ======================================================
-   TOP WORDS
-====================================================== */
-
-function renderTopWords(topWords) {
-
-    if (!topWordsElement) {
-        return;
-    }
+    // --------------------------------------------------------
+    // TOP WORDS
+    // --------------------------------------------------------
 
     topWordsElement.innerHTML = "";
 
 
-    if (!topWords || topWords.length === 0) {
+    if (
+        !result.top_words ||
+        result.top_words.length === 0
+    ) {
 
-        const empty = document.createElement("span");
+        const empty =
+            document.createElement("span");
 
         empty.className = "empty";
 
         empty.textContent =
             "Start typing to see word frequency.";
 
-        topWordsElement.appendChild(empty);
-
-        return;
-    }
-
-
-    for (const item of topWords) {
-
-        const element =
-            document.createElement("span");
-
-        element.className = "word-frequency";
-
-
-        const word =
-            document.createElement("strong");
-
-        word.textContent = item.word;
-
-
-        const count =
-            document.createElement("small");
-
-        count.textContent =
-            String(item.count);
-
-
-        element.appendChild(word);
-
-        element.appendChild(count);
-
-        topWordsElement.appendChild(element);
-
-    }
-
-}
-
-
-/* ======================================================
-   FILE UPLOAD INITIALIZATION
-====================================================== */
-
-function initializeFileUpload() {
-
-    if (!fileInput || !dropZone) {
-        return;
-    }
-
-
-    /*
-    Normal file selection.
-    */
-
-    fileInput.addEventListener(
-        "change",
-        async event => {
-
-            const files =
-                event.target.files;
-
-            if (!files || files.length === 0) {
-                return;
-            }
-
-            await processFile(files[0]);
-
-            /*
-            Allow selecting the same file again.
-            */
-
-            fileInput.value = "";
-
-        }
-    );
-
-
-    /*
-    Drag over.
-    */
-
-    dropZone.addEventListener(
-        "dragover",
-        event => {
-
-            event.preventDefault();
-
-            dropZone.classList.add(
-                "drag-over"
-            );
-
-        }
-    );
-
-
-    /*
-    Drag leave.
-    */
-
-    dropZone.addEventListener(
-        "dragleave",
-        event => {
-
-            event.preventDefault();
-
-            dropZone.classList.remove(
-                "drag-over"
-            );
-
-        }
-    );
-
-
-    /*
-    Drop.
-    */
-
-    dropZone.addEventListener(
-        "drop",
-        async event => {
-
-            event.preventDefault();
-
-            dropZone.classList.remove(
-                "drag-over"
-            );
-
-
-            const files =
-                event.dataTransfer.files;
-
-            if (!files || files.length === 0) {
-                return;
-            }
-
-            await processFile(files[0]);
-
-        }
-    );
-
-}
-
-
-/* ======================================================
-   PROCESS UPLOADED FILE
-====================================================== */
-
-async function processFile(file) {
-
-    if (isUploading) {
-        return;
-    }
-
-
-    /*
-    Validate file.
-    */
-
-    const validation =
-        validateFile(file);
-
-    if (!validation.valid) {
-
-        showUploadStatus(
-            validation.message,
-            "error"
+        topWordsElement.appendChild(
+            empty
         );
 
         return;
     }
 
 
-    isUploading = true;
+    result.top_words.forEach(
+        item => {
+
+            const element =
+                document.createElement("span");
+
+            element.className =
+                "word-frequency";
+
+            element.textContent =
+                `${item.word} (${item.count})`;
+
+            topWordsElement.appendChild(
+                element
+            );
+        }
+    );
+}
 
 
-    showUploadStatus(
+// ============================================================
+// LIVE TEXT ANALYSIS
+// ============================================================
+
+function updateFromText() {
+
+    const text =
+        textInput.value;
+
+    const result =
+        analyzeText(text);
+
+    updateStatistics(result);
+}
+
+
+if (textInput) {
+
+    textInput.addEventListener(
+        "input",
+        updateFromText
+    );
+}
+
+
+// ============================================================
+// CLEAR
+// ============================================================
+
+if (clearButton) {
+
+    clearButton.addEventListener(
+        "click",
+        function () {
+
+            textInput.value = "";
+
+            if (fileInput) {
+                fileInput.value = "";
+            }
+
+            if (uploadStatus) {
+                uploadStatus.textContent = "";
+            }
+
+            updateFromText();
+        }
+    );
+}
+
+
+// ============================================================
+// COPY TEXT
+// ============================================================
+
+if (copyTextButton) {
+
+    copyTextButton.addEventListener(
+        "click",
+        async function () {
+
+            try {
+
+                await navigator.clipboard.writeText(
+                    textInput.value
+                );
+
+                showStatus(
+                    "Text copied successfully.",
+                    false
+                );
+
+            } catch {
+
+                showStatus(
+                    "Unable to copy text.",
+                    true
+                );
+            }
+        }
+    );
+}
+
+
+// ============================================================
+// UPLOAD FILE
+// ============================================================
+
+if (fileInput) {
+
+    fileInput.addEventListener(
+        "change",
+        function () {
+
+            if (
+                fileInput.files &&
+                fileInput.files.length > 0
+            ) {
+
+                processFile(
+                    fileInput.files[0]
+                );
+            }
+        }
+    );
+}
+
+
+// ============================================================
+// DRAG AND DROP
+// ============================================================
+
+if (dropZone) {
+
+    [
+        "dragenter",
+        "dragover"
+    ].forEach(
+        eventName => {
+
+            dropZone.addEventListener(
+                eventName,
+                function (event) {
+
+                    event.preventDefault();
+
+                    dropZone.classList.add(
+                        "drag-active"
+                    );
+                }
+            );
+        }
+    );
+
+
+    [
+        "dragleave",
+        "drop"
+    ].forEach(
+        eventName => {
+
+            dropZone.addEventListener(
+                eventName,
+                function (event) {
+
+                    event.preventDefault();
+
+                    dropZone.classList.remove(
+                        "drag-active"
+                    );
+                }
+            );
+        }
+    );
+
+
+    dropZone.addEventListener(
+        "drop",
+        function (event) {
+
+            const files =
+                event.dataTransfer.files;
+
+            if (
+                files &&
+                files.length > 0
+            ) {
+
+                processFile(files[0]);
+            }
+        }
+    );
+}
+
+
+// ============================================================
+// PROCESS FILE
+// ============================================================
+
+async function processFile(file) {
+
+    const allowedTypes = [
+        ".pdf",
+        ".docx",
+        ".txt",
+        ".csv"
+    ];
+
+
+    const fileName =
+        file.name.toLowerCase();
+
+
+    const extension =
+        "." +
+        fileName.split(".").pop();
+
+
+    if (
+        !allowedTypes.includes(
+            extension
+        )
+    ) {
+
+        showStatus(
+            "Unsupported file. Use PDF, DOCX, TXT or CSV.",
+            true
+        );
+
+        return;
+    }
+
+
+    if (
+        file.size >
+        20 * 1024 * 1024
+    ) {
+
+        showStatus(
+            "File is larger than 20 MB.",
+            true
+        );
+
+        return;
+    }
+
+
+    showStatus(
         `Analyzing ${file.name}...`,
-        "loading"
+        false
     );
 
 
@@ -772,7 +748,7 @@ async function processFile(file) {
 
         const response =
             await fetch(
-                CONFIG.API_ENDPOINT,
+                "/api/analyze-file",
                 {
                     method: "POST",
                     body: formData
@@ -780,1081 +756,201 @@ async function processFile(file) {
             );
 
 
-        /*
-        Read response safely.
-        */
+        const data =
+            await response.json();
 
-        let data = null;
-
-        const contentType =
-            response.headers.get(
-                "content-type"
-            ) || "";
-
-
-        if (
-            contentType.includes(
-                "application/json"
-            )
-        ) {
-
-            data = await response.json();
-
-        } else {
-
-            const text =
-                await response.text();
-
-            throw new Error(
-                text ||
-                `Server returned HTTP ${response.status}`
-            );
-
-        }
-
-
-        /*
-        Handle HTTP errors.
-        */
 
         if (!response.ok) {
 
             throw new Error(
-                data?.detail ||
-                `Upload failed (${response.status})`
+                data.detail ||
+                "Unable to analyze file."
             );
-
         }
 
 
-        /*
-        Put extracted text into editor.
-        */
-
+        // Put extracted text into editor
         if (
-            typeof data.text === "string" &&
-            textInput
+            typeof data.text ===
+            "string"
         ) {
 
             textInput.value =
                 data.text;
-
         }
 
 
-        /*
-        Update statistics.
-
-        The backend is considered the authoritative
-        result for uploaded documents.
-        */
-
-        updateStatistics(
-            normalizeBackendResult(data)
-        );
+        updateStatistics(data);
 
 
-        /*
-        Display success information.
-        */
+        if (
+            data.ocr_required
+        ) {
 
-        let message =
-            `${file.name} analyzed successfully`;
-
-        if (data.pages) {
-
-            message +=
-                ` · ${data.pages} page` +
-                `${data.pages === 1 ? "" : "s"}`;
-
-        }
-
-
-        showUploadStatus(
-            message,
-            "success"
-        );
-
-
-        /*
-        Warn when backend reports OCR requirement.
-        */
-
-        if (data.ocr_required) {
-
-            showUploadStatus(
-                `${file.name} contains no selectable text. OCR is required for scanned/image-only PDFs.`,
-                "warning"
+            showStatus(
+                "This PDF appears to be scanned/image-based. OCR is required for accurate word counting.",
+                true
             );
 
+        } else {
+
+            showStatus(
+                `${file.name} analyzed successfully.`,
+                false
+            );
         }
 
 
     } catch (error) {
 
-        console.error(
-            "File analysis error:",
-            error
+        console.error(error);
+
+        showStatus(
+            error.message ||
+            "Could not analyze the file.",
+            true
         );
-
-
-        showUploadStatus(
-            getFriendlyError(error),
-            "error"
-        );
-
-    } finally {
-
-        isUploading = false;
-
     }
-
 }
 
 
-/* ======================================================
-   VALIDATE FILE
-====================================================== */
-
-function validateFile(file) {
-
-    if (!file) {
-
-        return {
-            valid: false,
-            message: "No file selected."
-        };
-
-    }
-
-
-    /*
-    File size.
-    */
-
-    if (
-        file.size >
-        CONFIG.MAX_FILE_SIZE
-    ) {
-
-        return {
-            valid: false,
-            message:
-                "File is larger than 20 MB."
-        };
-
-    }
-
-
-    /*
-    Extension.
-    */
-
-    const filename =
-        file.name.toLowerCase();
-
-    const extension =
-        filename.includes(".")
-            ? filename.slice(
-                filename.lastIndexOf(".")
-            )
-            : "";
-
-
-    if (
-        !CONFIG.SUPPORTED_EXTENSIONS.includes(
-            extension
-        )
-    ) {
-
-        return {
-            valid: false,
-            message:
-                "Unsupported file type. Please upload PDF, DOCX, TXT or CSV."
-        };
-
-    }
-
-
-    return {
-        valid: true,
-        message: ""
-    };
-
-}
-
-
-/* ======================================================
-   NORMALIZE BACKEND RESULT
-====================================================== */
-
-function normalizeBackendResult(data) {
-
-    return {
-
-        text:
-            typeof data.text === "string"
-                ? data.text
-                : "",
-
-        words:
-            toNumber(data.words),
-
-        characters:
-            toNumber(data.characters),
-
-        characters_no_spaces:
-            toNumber(
-                data.characters_no_spaces
-            ),
-
-        paragraphs:
-            toNumber(data.paragraphs),
-
-        sentences:
-            toNumber(data.sentences),
-
-        lines:
-            toNumber(data.lines),
-
-        unique_words:
-            toNumber(data.unique_words),
-
-        reading_seconds:
-            data.reading_seconds != null
-                ? toNumber(
-                    data.reading_seconds
-                )
-                : toNumber(
-                    data.reading_minutes
-                ) * 60,
-
-        speaking_seconds:
-            data.speaking_seconds != null
-                ? toNumber(
-                    data.speaking_seconds
-                )
-                : toNumber(
-                    data.speaking_minutes
-                ) * 60,
-
-        reading_minutes:
-            toNumber(
-                data.reading_minutes
-            ),
-
-        speaking_minutes:
-            toNumber(
-                data.speaking_minutes
-            ),
-
-        average_word_length:
-            toNumber(
-                data.average_word_length
-            ),
-
-        longest_word:
-            data.longest_word || "",
-
-        top_words:
-            Array.isArray(data.top_words)
-                ? data.top_words
-                : []
-
-    };
-
-}
-
-
-/* ======================================================
-   BUTTONS
-====================================================== */
-
-function initializeButtons() {
-
-
-    /*
-    Clear.
-    */
-
-    if (clearButton) {
-
-        clearButton.addEventListener(
-            "click",
-            clearEditor
-        );
-
-    }
-
-
-    /*
-    Copy editor text.
-    */
-
-    if (copyTextButton) {
-
-        copyTextButton.addEventListener(
-            "click",
-            copyEditorText
-        );
-
-    }
-
-
-    /*
-    Copy results.
-    */
-
-    if (copyResultsButton) {
-
-        copyResultsButton.addEventListener(
-            "click",
-            copyResults
-        );
-
-    }
-
-
-    /*
-    Download report.
-    */
-
-    if (downloadResultsButton) {
-
-        downloadResultsButton.addEventListener(
-            "click",
-            downloadReport
-        );
-
-    }
-
-
-    /*
-    Theme.
-    */
-
-    if (themeButton) {
-
-        themeButton.addEventListener(
-            "click",
-            toggleTheme
-        );
-
-    }
-
-}
-
-
-/* ======================================================
-   CLEAR EDITOR
-====================================================== */
-
-function clearEditor() {
-
-    if (textInput) {
-        textInput.value = "";
-    }
-
-
-    const result =
-        analyzeText("");
-
-    updateStatistics(result);
-
-
-    showUploadStatus(
-        "Editor cleared.",
-        "success"
-    );
-
-}
-
-
-/* ======================================================
-   COPY EDITOR TEXT
-====================================================== */
-
-async function copyEditorText() {
-
-    if (!textInput) {
-        return;
-    }
-
-    const text =
-        textInput.value;
-
-
-    if (!text) {
-
-        showUploadStatus(
-            "There is no text to copy.",
-            "warning"
-        );
-
-        return;
-    }
-
-
-    const success =
-        await copyToClipboard(text);
-
-
-    if (success) {
-
-        showUploadStatus(
-            "Text copied to clipboard.",
-            "success"
-        );
-
-    } else {
-
-        showUploadStatus(
-            "Could not copy the text.",
-            "error"
-        );
-
-    }
-
-}
-
-
-/* ======================================================
-   COPY RESULTS
-====================================================== */
-
-async function copyResults() {
-
-    const result =
-        currentAnalysis ||
-        analyzeText(
-            textInput
-                ? textInput.value
-                : ""
-        );
-
-
-    const report =
-        createReportText(result);
-
-
-    const success =
-        await copyToClipboard(report);
-
-
-    if (success) {
-
-        showUploadStatus(
-            "Analysis results copied.",
-            "success"
-        );
-
-    } else {
-
-        showUploadStatus(
-            "Could not copy the results.",
-            "error"
-        );
-
-    }
-
-}
-
-
-/* ======================================================
-   DOWNLOAD REPORT
-====================================================== */
-
-function downloadReport() {
-
-    const result =
-        currentAnalysis ||
-        analyzeText(
-            textInput
-                ? textInput.value
-                : ""
-        );
-
-
-    const report =
-        createReportText(result);
-
-
-    const blob =
-        new Blob(
-            [report],
-            {
-                type: "text/plain;charset=utf-8"
-            }
-        );
-
-
-    const url =
-        URL.createObjectURL(blob);
-
-
-    const link =
-        document.createElement("a");
-
-
-    link.href = url;
-
-    link.download =
-        "wordcounter-pro-report.txt";
-
-
-    document.body.appendChild(link);
-
-    link.click();
-
-    link.remove();
-
-
-    /*
-    Release object URL.
-    */
-
-    setTimeout(() => {
-
-        URL.revokeObjectURL(url);
-
-    }, 100);
-
-
-    showUploadStatus(
-        "Report downloaded.",
-        "success"
-    );
-
-}
-
-
-/* ======================================================
-   REPORT GENERATOR
-====================================================== */
-
-function createReportText(result) {
-
-    const topWords =
-        result.top_words || [];
-
-
-    let topWordsText =
-        "None";
-
-
-    if (topWords.length > 0) {
-
-        topWordsText =
-            topWords
-                .map(
-                    item =>
-                        `${item.word}: ${item.count}`
-                )
-                .join("\n");
-
-    }
-
-
-    return `WORDCOUNTER PRO
-==================
-
-Word Count Results
-
-Words: ${result.words}
-Characters: ${result.characters}
-Characters Without Spaces: ${result.characters_no_spaces}
-Paragraphs: ${result.paragraphs}
-Sentences: ${result.sentences}
-Lines: ${result.lines}
-Unique Words: ${result.unique_words}
-
-Reading Time: ${formatDuration(result.reading_seconds)}
-Speaking Time: ${formatDuration(result.speaking_seconds)}
-
-Average Word Length: ${result.average_word_length || 0}
-Longest Word: ${result.longest_word || "—"}
-
-Most Used Words:
-${topWordsText}
-
-Generated by WordCounter Pro
-`;
-
-}
-
-
-/* ======================================================
-   THEME
-====================================================== */
-
-function initializeTheme() {
-
-    const savedTheme =
-        localStorage.getItem(
-            "wordcounter-theme"
-        );
-
-
-    if (
-        savedTheme === "dark"
-    ) {
-
-        document.body.classList.add(
-            "dark-mode"
-        );
-
-        updateThemeButton(true);
-
-        return;
-
-    }
-
-
-    if (
-        savedTheme === "light"
-    ) {
-
-        document.body.classList.remove(
-            "dark-mode"
-        );
-
-        updateThemeButton(false);
-
-        return;
-
-    }
-
-
-    /*
-    Follow system preference.
-    */
-
-    const prefersDark =
-        window.matchMedia &&
-        window.matchMedia(
-            "(prefers-color-scheme: dark)"
-        ).matches;
-
-
-    if (prefersDark) {
-
-        document.body.classList.add(
-            "dark-mode"
-        );
-
-    }
-
-
-    updateThemeButton(
-        prefersDark
-    );
-
-}
-
-
-/* ======================================================
-   TOGGLE THEME
-====================================================== */
-
-function toggleTheme() {
-
-    const isDark =
-        document.body.classList.toggle(
-            "dark-mode"
-        );
-
-
-    localStorage.setItem(
-        "wordcounter-theme",
-        isDark
-            ? "dark"
-            : "light"
-    );
-
-
-    updateThemeButton(
-        isDark
-    );
-
-}
-
-
-/* ======================================================
-   THEME BUTTON
-====================================================== */
-
-function updateThemeButton(isDark) {
-
-    if (!themeButton) {
-        return;
-    }
-
-
-    themeButton.textContent =
-        isDark
-            ? "☀️"
-            : "🌙";
-
-
-    themeButton.setAttribute(
-        "aria-label",
-        isDark
-            ? "Switch to light mode"
-            : "Switch to dark mode"
-    );
-
-}
-
-
-/* ======================================================
-   UPLOAD STATUS
-====================================================== */
-
-function showUploadStatus(
+// ============================================================
+// STATUS MESSAGE
+// ============================================================
+
+function showStatus(
     message,
-    type = "info"
+    isError = false
 ) {
 
     if (!uploadStatus) {
         return;
     }
 
-
     uploadStatus.textContent =
         message;
 
-
-    uploadStatus.className =
-        `upload-status ${type}`;
-
+    uploadStatus.classList.toggle(
+        "error",
+        isError
+    );
 }
 
 
-/* ======================================================
-   FRIENDLY ERROR
-====================================================== */
+// ============================================================
+// COPY RESULTS
+// ============================================================
 
-function getFriendlyError(error) {
+if (copyResultsButton) {
 
-    if (!error) {
-        return "Something went wrong.";
-    }
+    copyResultsButton.addEventListener(
+        "click",
+        async function () {
 
-
-    if (
-        error instanceof TypeError
-    ) {
-
-        return (
-            "Unable to connect to the WordCounter server. " +
-            "Please check that the backend is running."
-        );
-
-    }
+            const results =
+                getResultsText();
 
 
-    return error.message ||
-        "Unable to analyze the file.";
+            try {
 
+                await navigator.clipboard.writeText(
+                    results
+                );
+
+                showStatus(
+                    "Results copied successfully.",
+                    false
+                );
+
+            } catch {
+
+                showStatus(
+                    "Unable to copy results.",
+                    true
+                );
+            }
+        }
+    );
 }
 
 
-/* ======================================================
-   CLIPBOARD
-====================================================== */
+// ============================================================
+// RESULTS TEXT
+// ============================================================
 
-async function copyToClipboard(text) {
+function getResultsText() {
 
-    if (!text) {
-        return false;
-    }
+    return `
+WordCounter Pro
+================
+
+Words: ${wordsElement.textContent}
+Characters: ${charactersElement.textContent}
+Characters Without Spaces: ${charactersNoSpacesElement.textContent}
+Paragraphs: ${paragraphsElement.textContent}
+Sentences: ${sentencesElement.textContent}
+Lines: ${linesElement.textContent}
+Unique Words: ${uniqueWordsElement.textContent}
+Reading Time: ${readingTimeElement.textContent}
+Speaking Time: ${speakingTimeElement.textContent}
+
+Average Word Length: ${averageWordElement.textContent}
+Longest Word: ${longestWordElement.textContent}
+`.trim();
+}
 
 
-    /*
-    Modern Clipboard API.
-    */
+// ============================================================
+// DOWNLOAD REPORT
+// ============================================================
 
-    try {
+if (downloadResultsButton) {
 
-        if (
-            navigator.clipboard &&
-            window.isSecureContext
-        ) {
+    downloadResultsButton.addEventListener(
+        "click",
+        function () {
 
-            await navigator.clipboard.writeText(
-                text
+            const report =
+                getResultsText();
+
+
+            const blob =
+                new Blob(
+                    [report],
+                    {
+                        type:
+                            "text/plain;charset=utf-8"
+                    }
+                );
+
+
+            const url =
+                URL.createObjectURL(
+                    blob
+                );
+
+
+            const link =
+                document.createElement(
+                    "a"
+                );
+
+            link.href = url;
+
+            link.download =
+                "wordcounter-report.txt";
+
+            document.body.appendChild(
+                link
             );
 
-            return true;
+            link.click();
 
-        }
+            link.remove();
 
-    } catch (error) {
-
-        console.warn(
-            "Clipboard API failed:",
-            error
-        );
-
-    }
-
-
-    /*
-    Fallback for older browsers.
-    */
-
-    try {
-
-        const textarea =
-            document.createElement(
-                "textarea"
+            URL.revokeObjectURL(
+                url
             );
-
-        textarea.value = text;
-
-        textarea.style.position =
-            "fixed";
-
-        textarea.style.opacity =
-            "0";
-
-        document.body.appendChild(
-            textarea
-        );
-
-        textarea.focus();
-
-        textarea.select();
-
-
-        const successful =
-            document.execCommand(
-                "copy"
-            );
-
-
-        textarea.remove();
-
-        return successful;
-
-    } catch (error) {
-
-        console.error(
-            "Clipboard fallback failed:",
-            error
-        );
-
-        return false;
-
-    }
-
-}
-
-
-/* ======================================================
-   HELPERS
-====================================================== */
-
-function setText(
-    element,
-    value
-) {
-
-    if (!element) {
-        return;
-    }
-
-    element.textContent =
-        value;
-
-}
-
-
-function toNumber(value) {
-
-    const number =
-        Number(value);
-
-    return Number.isFinite(number)
-        ? number
-        : 0;
-
-}
-
-
-function formatNumber(value) {
-
-    return Number(value || 0)
-        .toLocaleString();
-
-}
-
-
-/* ======================================================
-   FORMAT TIME
-====================================================== */
-
-function formatDuration(seconds) {
-
-    seconds =
-        Math.max(
-            0,
-            Math.round(
-                Number(seconds) || 0
-            )
-        );
-
-
-    if (seconds === 0) {
-        return "0 min";
-    }
-
-
-    const hours =
-        Math.floor(
-            seconds / 3600
-        );
-
-
-    const minutes =
-        Math.floor(
-            (seconds % 3600) / 60
-        );
-
-
-    const remainingSeconds =
-        seconds % 60;
-
-
-    if (hours > 0) {
-
-        if (minutes > 0) {
-
-            return `${hours} hr ${minutes} min`;
-
         }
-
-        return `${hours} hr`;
-
-    }
-
-
-    if (minutes > 0) {
-
-        if (remainingSeconds > 0) {
-
-            return `${minutes} min ${remainingSeconds} sec`;
-
-        }
-
-        return `${minutes} min`;
-
-    }
-
-
-    return `${remainingSeconds} sec`;
-
+    );
 }
-
-
-/* ======================================================
-   KEYBOARD SHORTCUTS
-====================================================== */
-
-document.addEventListener(
-    "keydown",
-    event => {
-
-        /*
-        Ctrl + Shift + C
-        Clear editor
-        */
-
-        if (
-            event.ctrlKey &&
-            event.shiftKey &&
-            event.key.toLowerCase() === "c"
-        ) {
-
-            event.preventDefault();
-
-            clearEditor();
-
-        }
-
-
-        /*
-        Ctrl + Shift + S
-        Download report
-        */
-
-        if (
-            event.ctrlKey &&
-            event.shiftKey &&
-            event.key.toLowerCase() === "s"
-        ) {
-
-            event.preventDefault();
-
-            downloadReport();
-
-        }
-
-    }
-);
-
-
-/* ======================================================
-   PREVENT ACCIDENTAL FILE DROP ON PAGE
-====================================================== */
-
-window.addEventListener(
-    "dragover",
-    event => {
-
-        event.preventDefault();
-
-    }
-);
-
-
-window.addEventListener(
-    "drop",
-    event => {
-
-        /*
-        Only the dropZone should handle files.
-        */
-
-        if (
-            !dropZone ||
-            !dropZone.contains(event.target)
-        ) {
-
-            event.preventDefault();
-
-        }
-
-    }
-);
-
-
-/* ======================================================
-   EXPORT FOR DEBUGGING
-====================================================== */
-
-window.WordCounterPro = {
-
-    analyzeText,
-
-    updateStatistics,
-
-    processFile,
-
-    clearEditor,
-
-    downloadReport,
-
-    copyResults
-
-};
