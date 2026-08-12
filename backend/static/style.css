@@ -2,7 +2,10 @@
    WORDCOUNTER PRO
    COMPLETE RESPONSIVE CSS
    DARK + LIGHT MODE
+   PREMIUM RGB WAVE LIGHTING
+   NO BACKDROP-FILTER
    ========================================================= */
+
 
 /* =========================================================
    THEME VARIABLES
@@ -29,6 +32,7 @@
     --shadow: rgba(0, 0, 0, 0.35);
 }
 
+
 /* =========================================================
    LIGHT MODE
    ========================================================= */
@@ -53,6 +57,7 @@ html[data-theme="light"] {
 
     --shadow: rgba(15, 23, 42, 0.10);
 }
+
 
 /* =========================================================
    RESET
@@ -83,13 +88,116 @@ body {
     background: var(--bg);
     color: var(--text);
 
+    overflow-x: hidden;
+
     transition:
         background-color 0.3s ease,
         color 0.3s ease;
 }
 
+
 /* =========================================================
-   SMOOTH THEME TRANSITION
+   RGB BACKGROUND WAVE
+   ========================================================= */
+
+body::before {
+    content: "";
+
+    position: fixed;
+
+    width: 1000px;
+    height: 500px;
+
+    top: 80px;
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    background:
+        radial-gradient(
+            ellipse at 20% 50%,
+            rgba(139, 92, 246, 0.24),
+            transparent 55%
+        ),
+        radial-gradient(
+            ellipse at 50% 40%,
+            rgba(59, 130, 246, 0.18),
+            transparent 55%
+        ),
+        radial-gradient(
+            ellipse at 80% 50%,
+            rgba(236, 72, 153, 0.22),
+            transparent 55%
+        );
+
+    filter: blur(60px);
+
+    opacity: 0.8;
+
+    pointer-events: none;
+
+    z-index: 0;
+
+    animation:
+        rgbAtmosphere 12s ease-in-out infinite alternate;
+}
+
+
+/* =========================================================
+   RGB WAVE STRIP
+   ========================================================= */
+
+body::after {
+    content: "";
+
+    position: fixed;
+
+    width: 1200px;
+    height: 240px;
+
+    top: 330px;
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(139, 92, 246, 0.18) 20%,
+            rgba(59, 130, 246, 0.20) 40%,
+            rgba(6, 182, 212, 0.18) 55%,
+            rgba(236, 72, 153, 0.20) 75%,
+            transparent 100%
+        );
+
+    filter: blur(45px);
+
+    opacity: 0.65;
+
+    pointer-events: none;
+
+    z-index: 0;
+
+    animation:
+        rgbWaveMove 10s ease-in-out infinite alternate;
+}
+
+
+/* =========================================================
+   KEEP WEBSITE ABOVE RGB BACKGROUND
+   ========================================================= */
+
+.navbar,
+main,
+footer {
+    position: relative;
+    z-index: 1;
+}
+
+
+/* =========================================================
+   SMOOTH TRANSITIONS
    ========================================================= */
 
 body,
@@ -111,27 +219,38 @@ textarea {
         box-shadow 0.3s ease;
 }
 
+
 /* =========================================================
    NAVBAR
    ========================================================= */
 
 .navbar {
     height: 72px;
+
     width: 100%;
 
     display: flex;
+
     align-items: center;
+
     justify-content: space-between;
 
     padding: 0 6%;
 
     background: var(--card);
+
     border-bottom: 1px solid var(--border);
 
     position: sticky;
+
     top: 0;
+
     z-index: 1000;
+
+    box-shadow:
+        0 4px 25px rgba(0, 0, 0, 0.08);
 }
+
 
 /* =========================================================
    LOGO
@@ -139,11 +258,15 @@ textarea {
 
 .logo {
     display: flex;
+
     align-items: center;
+
     gap: 6px;
 
     font-size: 21px;
+
     font-weight: 700;
+
     letter-spacing: -0.4px;
 }
 
@@ -153,8 +276,13 @@ textarea {
 
 .logo-icon {
     color: var(--accent);
+
     font-size: 23px;
+
+    animation:
+        logoGlow 3s ease-in-out infinite alternate;
 }
+
 
 /* =========================================================
    THEME BUTTON
@@ -165,30 +293,44 @@ textarea {
     height: 44px;
 
     display: flex;
+
     align-items: center;
     justify-content: center;
 
     border: 1px solid var(--border);
+
     border-radius: 12px;
 
     background: var(--card);
+
     color: var(--text);
 
     font-size: 19px;
+
     cursor: pointer;
 
     outline: none;
+
+    position: relative;
+
+    overflow: hidden;
 }
 
 .theme-button:hover {
     background: var(--accent-soft);
+
     border-color: var(--accent);
+
     transform: translateY(-1px);
+
+    box-shadow:
+        0 0 20px rgba(139, 92, 246, 0.25);
 }
 
 .theme-button:active {
     transform: scale(0.94);
 }
+
 
 /* =========================================================
    MAIN
@@ -196,10 +338,12 @@ textarea {
 
 main {
     width: min(1180px, 92%);
+
     margin: 0 auto;
 
     padding: 65px 0 50px;
 }
+
 
 /* =========================================================
    HERO
@@ -207,8 +351,96 @@ main {
 
 .hero {
     text-align: center;
+
     margin-bottom: 45px;
+
+    position: relative;
+
+    isolation: isolate;
 }
+
+
+/* =========================================================
+   HERO RGB GLOW
+   ========================================================= */
+
+.hero::before {
+    content: "";
+
+    position: absolute;
+
+    width: 650px;
+    height: 200px;
+
+    top: 20px;
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(139, 92, 246, 0),
+            rgba(139, 92, 246, 0.20),
+            rgba(59, 130, 246, 0.20),
+            rgba(6, 182, 212, 0.18),
+            rgba(236, 72, 153, 0.20),
+            rgba(139, 92, 246, 0)
+        );
+
+    filter: blur(35px);
+
+    border-radius: 50%;
+
+    opacity: 0.7;
+
+    z-index: -1;
+
+    animation:
+        heroRGB 7s ease-in-out infinite alternate;
+}
+
+
+/* =========================================================
+   RGB LINE UNDER HERO
+   ========================================================= */
+
+.hero::after {
+    content: "";
+
+    position: absolute;
+
+    width: min(700px, 80%);
+
+    height: 2px;
+
+    left: 50%;
+    bottom: -20px;
+
+    transform: translateX(-50%);
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            #8b5cf6,
+            #3b82f6,
+            #06b6d4,
+            #ec4899,
+            #8b5cf6,
+            transparent
+        );
+
+    background-size: 300% 100%;
+
+    box-shadow:
+        0 0 8px rgba(139, 92, 246, 0.7),
+        0 0 18px rgba(59, 130, 246, 0.4);
+
+    animation:
+        rgbLine 5s linear infinite;
+}
+
 
 .badge {
     display: inline-block;
@@ -216,23 +448,33 @@ main {
     padding: 8px 15px;
 
     border: 1px solid var(--border);
+
     border-radius: 999px;
 
     background: var(--accent-soft);
+
     color: var(--accent);
 
     font-size: 12px;
+
     font-weight: 700;
+
     letter-spacing: 0.8px;
 
     margin-bottom: 20px;
+
+    box-shadow:
+        0 0 20px rgba(139, 92, 246, 0.08);
 }
+
 
 .hero h1 {
     font-size: clamp(38px, 6vw, 66px);
+
     line-height: 1.05;
 
     letter-spacing: -2.5px;
+
     font-weight: 800;
 
     margin-bottom: 20px;
@@ -240,34 +482,66 @@ main {
 
 .hero h1 span {
     display: block;
+
     color: var(--accent);
+
+    text-shadow:
+        0 0 25px rgba(139, 92, 246, 0.25);
 }
 
 .hero p {
     max-width: 650px;
+
     margin: 0 auto;
 
     color: var(--muted);
 
     font-size: 17px;
+
     line-height: 1.7;
 }
+
 
 /* =========================================================
    MAIN CARD
    ========================================================= */
 
 .main-card {
-    background: var(--card);
-
-    border: 1px solid var(--border);
     border-radius: 22px;
 
     padding: 30px;
 
+    border: 2px solid transparent;
+
+    background:
+        linear-gradient(
+            var(--card),
+            var(--card)
+        ) padding-box,
+
+        linear-gradient(
+            90deg,
+            #8b5cf6,
+            #3b82f6,
+            #06b6d4,
+            #22c55e,
+            #facc15,
+            #ec4899,
+            #8b5cf6
+        ) border-box;
+
+    background-size:
+        100% 100%,
+        300% 100%;
+
     box-shadow:
-        0 20px 50px var(--shadow);
+        0 20px 50px var(--shadow),
+        0 0 40px rgba(139, 92, 246, 0.08);
+
+    animation:
+        rgbBorder 8s linear infinite;
 }
+
 
 /* =========================================================
    UPLOAD AREA
@@ -277,8 +551,11 @@ main {
     min-height: 280px;
 
     display: flex;
+
     flex-direction: column;
+
     align-items: center;
+
     justify-content: center;
 
     text-align: center;
@@ -286,16 +563,90 @@ main {
     padding: 35px;
 
     border: 2px dashed var(--border);
+
     border-radius: 18px;
 
     background: var(--input);
+
+    position: relative;
+
+    overflow: hidden;
 }
 
 .upload-area:hover,
 .upload-area.drag-over {
     border-color: var(--accent);
+
     background: var(--accent-soft);
+
+    box-shadow:
+        0 0 35px rgba(139, 92, 246, 0.12);
 }
+
+
+/* =========================================================
+   UPLOAD RGB GLOW 1
+   ========================================================= */
+
+.upload-area::before {
+    content: "";
+
+    position: absolute;
+
+    width: 280px;
+    height: 280px;
+
+    left: -120px;
+    top: -150px;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(139, 92, 246, 0.25),
+            rgba(59, 130, 246, 0.12),
+            transparent 70%
+        );
+
+    filter: blur(20px);
+
+    pointer-events: none;
+
+    animation:
+        uploadGlow 6s ease-in-out infinite alternate;
+}
+
+
+/* =========================================================
+   UPLOAD RGB GLOW 2
+   ========================================================= */
+
+.upload-area::after {
+    content: "";
+
+    position: absolute;
+
+    width: 260px;
+    height: 260px;
+
+    right: -110px;
+    bottom: -150px;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(236, 72, 153, 0.22),
+            rgba(6, 182, 212, 0.12),
+            transparent 70%
+        );
+
+    filter: blur(20px);
+
+    pointer-events: none;
+
+    animation:
+        uploadGlow2 7s ease-in-out infinite alternate;
+}
+
 
 /* =========================================================
    UPLOAD ICON
@@ -306,33 +657,58 @@ main {
     height: 58px;
 
     display: flex;
+
     align-items: center;
     justify-content: center;
 
     border-radius: 16px;
 
     background: var(--accent-soft);
+
     color: var(--accent);
 
     font-size: 28px;
 
     margin-bottom: 18px;
+
+    position: relative;
+
+    z-index: 1;
+
+    box-shadow:
+        0 0 25px rgba(139, 92, 246, 0.15);
 }
+
+
+.upload-area h2,
+.upload-area p,
+.upload-area small,
+.upload-button,
+.upload-status {
+    position: relative;
+
+    z-index: 1;
+}
+
 
 .upload-area h2 {
     font-size: 21px;
+
     margin-bottom: 8px;
 }
 
 .upload-area p {
     color: var(--muted);
+
     margin-bottom: 20px;
 }
 
 .upload-area small {
     color: var(--muted);
+
     margin-top: 14px;
 }
+
 
 /* =========================================================
    UPLOAD BUTTON
@@ -340,7 +716,9 @@ main {
 
 .upload-button {
     display: inline-flex;
+
     align-items: center;
+
     justify-content: center;
 
     padding: 11px 22px;
@@ -348,23 +726,67 @@ main {
     border-radius: 10px;
 
     background: var(--accent);
+
     color: #ffffff;
 
     font-size: 14px;
+
     font-weight: 700;
 
     cursor: pointer;
+
     user-select: none;
+
+    position: relative;
+
+    overflow: hidden;
+
+    box-shadow:
+        0 8px 25px rgba(139, 92, 246, 0.25);
 }
 
 .upload-button:hover {
     background: var(--accent-hover);
+
     transform: translateY(-1px);
+
+    box-shadow:
+        0 10px 30px rgba(139, 92, 246, 0.35);
 }
 
 .upload-button:active {
     transform: scale(0.97);
 }
+
+
+/* Moving shine */
+.upload-button::before {
+    content: "";
+
+    position: absolute;
+
+    width: 160%;
+    height: 250%;
+
+    left: -30%;
+    top: -75%;
+
+    background:
+        linear-gradient(
+            115deg,
+            transparent 25%,
+            rgba(255, 255, 255, 0.35) 45%,
+            transparent 65%
+        );
+
+    transform: translateX(-100%);
+
+    animation:
+        buttonLight 4s ease-in-out infinite;
+
+    pointer-events: none;
+}
+
 
 /* =========================================================
    UPLOAD STATUS
@@ -378,8 +800,10 @@ main {
     color: var(--accent);
 
     font-size: 13px;
+
     font-weight: 600;
 }
+
 
 /* =========================================================
    OR
@@ -387,6 +811,7 @@ main {
 
 .or {
     display: flex;
+
     align-items: center;
 
     gap: 15px;
@@ -409,8 +834,10 @@ main {
 
 .or span {
     font-size: 12px;
+
     font-weight: 700;
 }
+
 
 /* =========================================================
    EDITOR
@@ -420,17 +847,24 @@ main {
     overflow: hidden;
 
     border: 1px solid var(--border);
+
     border-radius: 16px;
 
     background: var(--input);
+
+    box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.05);
 }
+
 
 .editor-header,
 .editor-footer {
     min-height: 52px;
 
     display: flex;
+
     align-items: center;
+
     justify-content: space-between;
 
     padding: 0 17px;
@@ -442,6 +876,7 @@ main {
 
 .editor-footer {
     border-top: 1px solid var(--border);
+
     border-bottom: none;
 
     font-size: 12px;
@@ -451,6 +886,7 @@ main {
     color: var(--text);
 }
 
+
 /* =========================================================
    TEXTAREA
    ========================================================= */
@@ -459,20 +895,25 @@ textarea {
     display: block;
 
     width: 100%;
+
     min-height: 260px;
 
     resize: vertical;
 
     border: none;
+
     outline: none;
 
     padding: 20px;
 
     background: var(--input);
+
     color: var(--text);
 
     font-family: inherit;
+
     font-size: 16px;
+
     line-height: 1.7;
 }
 
@@ -482,8 +923,10 @@ textarea::placeholder {
 
 textarea:focus {
     box-shadow:
-        inset 0 0 0 1px var(--accent);
+        inset 0 0 0 1px var(--accent),
+        0 0 25px rgba(139, 92, 246, 0.10);
 }
+
 
 /* =========================================================
    SMALL BUTTON
@@ -493,12 +936,15 @@ textarea:focus {
     padding: 7px 12px;
 
     border: 1px solid var(--border);
+
     border-radius: 8px;
 
     background: transparent;
+
     color: var(--text);
 
     font-size: 12px;
+
     font-weight: 600;
 
     cursor: pointer;
@@ -506,8 +952,13 @@ textarea:focus {
 
 .small-button:hover {
     background: var(--accent-soft);
+
     border-color: var(--accent);
+
+    box-shadow:
+        0 0 15px rgba(139, 92, 246, 0.12);
 }
+
 
 /* =========================================================
    STATISTICS
@@ -524,30 +975,83 @@ textarea:focus {
     margin-top: 25px;
 }
 
+
 .stat-card {
     min-height: 115px;
 
     display: flex;
+
     flex-direction: column;
+
     justify-content: center;
 
     padding: 20px;
 
     border: 1px solid var(--border);
+
     border-radius: 15px;
 
     background: var(--input);
+
+    position: relative;
+
+    overflow: hidden;
 }
 
 .stat-card:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
+
     border-color: var(--accent);
+
+    box-shadow:
+        0 10px 30px rgba(139, 92, 246, 0.12);
 }
+
+
+.stat-card::before {
+    content: "";
+
+    position: absolute;
+
+    width: 140px;
+    height: 140px;
+
+    top: -90px;
+    right: -90px;
+
+    border-radius: 50%;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(139, 92, 246, 0.25),
+            transparent 70%
+        );
+
+    filter: blur(10px);
+
+    opacity: 0;
+
+    transition:
+        opacity 0.35s ease,
+        transform 0.35s ease;
+
+    pointer-events: none;
+}
+
+.stat-card:hover::before {
+    opacity: 1;
+
+    transform:
+        translate(-20px, 20px);
+}
+
 
 .stat-card span {
     color: var(--muted);
 
     font-size: 13px;
+
     line-height: 1.4;
 
     margin-bottom: 8px;
@@ -557,8 +1061,10 @@ textarea:focus {
     color: var(--text);
 
     font-size: 28px;
+
     font-weight: 800;
 }
+
 
 /* =========================================================
    ADVANCED
@@ -579,19 +1085,34 @@ textarea:focus {
     padding: 24px;
 
     border: 1px solid var(--border);
+
     border-radius: 15px;
 
     background: var(--input);
+
+    position: relative;
+
+    overflow: hidden;
+}
+
+.advanced-card:hover {
+    border-color: var(--accent);
+
+    box-shadow:
+        0 10px 35px rgba(139, 92, 246, 0.10);
 }
 
 .advanced-card h3 {
     margin-bottom: 20px;
+
     font-size: 17px;
 }
 
 .analysis-row {
     display: flex;
+
     align-items: center;
+
     justify-content: space-between;
 
     padding: 13px 0;
@@ -605,6 +1126,7 @@ textarea:focus {
 
 .analysis-row span {
     color: var(--muted);
+
     font-size: 14px;
 }
 
@@ -618,23 +1140,28 @@ textarea:focus {
     overflow-wrap: anywhere;
 }
 
+
 /* =========================================================
    TOP WORDS
    ========================================================= */
 
 .top-words {
     display: flex;
+
     flex-wrap: wrap;
+
     gap: 9px;
 }
 
 .top-words .empty {
     color: var(--muted);
+
     font-size: 14px;
 }
 
 .word-frequency {
     display: inline-flex;
+
     align-items: center;
 
     gap: 8px;
@@ -642,11 +1169,19 @@ textarea:focus {
     padding: 8px 11px;
 
     border: 1px solid var(--border);
+
     border-radius: 9px;
 
     background: var(--card);
 
     font-size: 13px;
+}
+
+.word-frequency:hover {
+    border-color: var(--accent);
+
+    box-shadow:
+        0 0 15px rgba(139, 92, 246, 0.10);
 }
 
 .word-frequency strong {
@@ -657,7 +1192,9 @@ textarea:focus {
     min-width: 20px;
 
     display: inline-flex;
+
     align-items: center;
+
     justify-content: center;
 
     padding: 2px 5px;
@@ -665,10 +1202,12 @@ textarea:focus {
     border-radius: 5px;
 
     background: var(--accent-soft);
+
     color: var(--accent);
 
     font-weight: 700;
 }
+
 
 /* =========================================================
    ACTIONS
@@ -676,6 +1215,7 @@ textarea:focus {
 
 .actions {
     display: flex;
+
     justify-content: center;
 
     gap: 12px;
@@ -687,12 +1227,15 @@ textarea:focus {
     padding: 12px 18px;
 
     border: 1px solid var(--border);
+
     border-radius: 10px;
 
     background: var(--card);
+
     color: var(--text);
 
     font-size: 13px;
+
     font-weight: 700;
 
     cursor: pointer;
@@ -700,10 +1243,15 @@ textarea:focus {
 
 .secondary-button:hover {
     background: var(--accent-soft);
+
     border-color: var(--accent);
 
     transform: translateY(-1px);
+
+    box-shadow:
+        0 0 20px rgba(139, 92, 246, 0.12);
 }
+
 
 /* =========================================================
    FOOTER
@@ -719,17 +1267,19 @@ footer {
     font-size: 13px;
 }
 
+
 /* =========================================================
    LIGHT MODE POLISH
    ========================================================= */
 
 html[data-theme="light"] body {
     background: #f5f7fb;
+
     color: #111827;
 }
 
 html[data-theme="light"] .navbar {
-    background: #ffffff;
+    background: rgba(255, 255, 255, 0.96);
 
     box-shadow:
         0 4px 20px rgba(15, 23, 42, 0.05);
@@ -737,7 +1287,8 @@ html[data-theme="light"] .navbar {
 
 html[data-theme="light"] .main-card {
     box-shadow:
-        0 20px 50px rgba(15, 23, 42, 0.08);
+        0 20px 50px rgba(15, 23, 42, 0.08),
+        0 0 40px rgba(124, 58, 237, 0.08);
 }
 
 html[data-theme="light"] .upload-area {
@@ -750,6 +1301,7 @@ html[data-theme="light"] .editor {
 
 html[data-theme="light"] textarea {
     background: #ffffff;
+
     color: #111827;
 }
 
@@ -775,25 +1327,43 @@ html[data-theme="light"] .secondary-button {
     background: #ffffff;
 }
 
+
 /* =========================================================
    DARK MODE
    ========================================================= */
 
 html[data-theme="dark"] body {
     background: #0b0d10;
+
     color: #f5f7fa;
 }
 
+
 /* =========================================================
-   ACCESSIBILITY
+   RGB LIGHT MODE ADJUSTMENT
+   ========================================================= */
+
+html[data-theme="light"] body::before {
+    opacity: 0.45;
+}
+
+html[data-theme="light"] body::after {
+    opacity: 0.35;
+}
+
+
+/* =========================================================
+   FOCUS ACCESSIBILITY
    ========================================================= */
 
 button:focus-visible,
 label:focus-visible,
 textarea:focus-visible {
     outline: 2px solid var(--accent);
+
     outline-offset: 3px;
 }
+
 
 /* =========================================================
    RESPONSIVE - TABLET
@@ -817,7 +1387,16 @@ textarea:focus-visible {
     .hero h1 {
         letter-spacing: -1.5px;
     }
+
+    body::before {
+        width: 800px;
+    }
+
+    body::after {
+        width: 900px;
+    }
 }
+
 
 /* =========================================================
    RESPONSIVE - MOBILE
@@ -831,11 +1410,13 @@ textarea:focus-visible {
 
     main {
         width: 94%;
+
         padding-top: 35px;
     }
 
     .main-card {
         padding: 16px;
+
         border-radius: 16px;
     }
 
@@ -878,7 +1459,207 @@ textarea:focus-visible {
     .logo {
         font-size: 18px;
     }
+
+    body::before {
+        width: 600px;
+        height: 400px;
+
+        top: 100px;
+
+        filter: blur(45px);
+    }
+
+    body::after {
+        width: 700px;
+        height: 200px;
+
+        filter: blur(35px);
+    }
+
+    .hero::before {
+        width: 90%;
+    }
+
+    .hero::after {
+        width: 75%;
+    }
 }
+
+
+/* =========================================================
+   RGB ANIMATIONS
+   ========================================================= */
+
+@keyframes rgbAtmosphere {
+
+    0% {
+        transform:
+            translateX(-55%)
+            translateY(0)
+            scale(1);
+    }
+
+    50% {
+        transform:
+            translateX(-45%)
+            translateY(25px)
+            scale(1.08);
+    }
+
+    100% {
+        transform:
+            translateX(-50%)
+            translateY(-15px)
+            scale(1.03);
+    }
+}
+
+
+@keyframes rgbWaveMove {
+
+    0% {
+        transform:
+            translateX(-55%)
+            translateY(0)
+            rotate(-2deg);
+    }
+
+    50% {
+        transform:
+            translateX(-45%)
+            translateY(30px)
+            rotate(2deg);
+    }
+
+    100% {
+        transform:
+            translateX(-50%)
+            translateY(-20px)
+            rotate(-1deg);
+    }
+}
+
+
+@keyframes heroRGB {
+
+    0% {
+        transform:
+            translateX(-50%)
+            scaleX(0.85);
+
+        opacity: 0.40;
+    }
+
+    50% {
+        transform:
+            translateX(-50%)
+            scaleX(1.05);
+
+        opacity: 0.80;
+    }
+
+    100% {
+        transform:
+            translateX(-50%)
+            scaleX(0.95);
+
+        opacity: 0.55;
+    }
+}
+
+
+@keyframes rgbLine {
+
+    0% {
+        background-position: 0% 50%;
+    }
+
+    100% {
+        background-position: 300% 50%;
+    }
+}
+
+
+@keyframes rgbBorder {
+
+    0% {
+        background-position:
+            0% 0%,
+            0% 50%;
+    }
+
+    100% {
+        background-position:
+            0% 0%,
+            300% 50%;
+    }
+}
+
+
+@keyframes uploadGlow {
+
+    0% {
+        transform:
+            translate(0, 0)
+            scale(1);
+    }
+
+    100% {
+        transform:
+            translate(170px, 80px)
+            scale(1.25);
+    }
+}
+
+
+@keyframes uploadGlow2 {
+
+    0% {
+        transform:
+            translate(0, 0)
+            scale(1);
+    }
+
+    100% {
+        transform:
+            translate(-150px, -70px)
+            scale(1.3);
+    }
+}
+
+
+@keyframes buttonLight {
+
+    0% {
+        transform:
+            translateX(-100%);
+    }
+
+    45% {
+        transform:
+            translateX(100%);
+    }
+
+    100% {
+        transform:
+            translateX(100%);
+    }
+}
+
+
+@keyframes logoGlow {
+
+    0% {
+        text-shadow:
+            0 0 5px rgba(139, 92, 246, 0.25);
+    }
+
+    100% {
+        text-shadow:
+            0 0 18px rgba(139, 92, 246, 0.70);
+    }
+}
+
 
 /* =========================================================
    REDUCED MOTION
@@ -890,7 +1671,20 @@ textarea:focus-visible {
     *::before,
     *::after {
         scroll-behavior: auto !important;
+
         transition: none !important;
+
+        animation: none !important;
+    }
+
+    body::before,
+    body::after,
+    .hero::before,
+    .hero::after,
+    .upload-area::before,
+    .upload-area::after,
+    .upload-button::before,
+    .logo-icon {
         animation: none !important;
     }
 }
