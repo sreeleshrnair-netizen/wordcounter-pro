@@ -1,0 +1,1219 @@
+:root {
+    --background: #f5f7fb;
+    --card: #ffffff;
+    --card-hover: #fafaff;
+    --text: #111827;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+
+    --primary: #635bff;
+    --primary-dark: #5148e5;
+    --secondary: #8b5cf6;
+
+    --success: #10b981;
+    --danger: #ef4444;
+
+    --shadow:
+        0 20px 60px rgba(31, 41, 55, 0.10);
+
+    --shadow-small:
+        0 8px 25px rgba(31, 41, 55, 0.08);
+}
+
+
+/* =====================================================
+   DARK MODE VARIABLES
+===================================================== */
+
+body.dark {
+    --background: #090d18;
+    --card: #111827;
+    --card-hover: #172033;
+    --text: #f9fafb;
+    --muted: #9ca3af;
+    --border: #263149;
+
+    --shadow:
+        0 20px 60px rgba(0, 0, 0, 0.35);
+
+    --shadow-small:
+        0 8px 25px rgba(0, 0, 0, 0.25);
+}
+
+
+/* =====================================================
+   RESET
+===================================================== */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+
+html {
+    scroll-behavior: smooth;
+}
+
+
+body {
+    min-height: 100vh;
+
+    font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    color: var(--text);
+
+    background:
+        radial-gradient(
+            circle at 50% -10%,
+            #e9e6ff 0%,
+            var(--background) 42%
+        );
+
+    transition:
+        background 0.3s ease,
+        color 0.3s ease;
+}
+
+
+body.dark {
+    background:
+        radial-gradient(
+            circle at 50% -10%,
+            #28204f 0%,
+            var(--background) 45%
+        );
+}
+
+
+button,
+input,
+textarea {
+    font-family: inherit;
+}
+
+
+button {
+    cursor: pointer;
+}
+
+
+::selection {
+    background: rgba(99, 91, 255, 0.25);
+}
+
+
+/* =====================================================
+   NAVBAR
+===================================================== */
+
+.navbar {
+    width: 100%;
+    height: 72px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 6%;
+
+    border-bottom: 1px solid var(--border);
+
+    background: rgba(255, 255, 255, 0.65);
+
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+
+    position: sticky;
+    top: 0;
+
+    z-index: 100;
+
+    transition:
+        background 0.3s ease,
+        border-color 0.3s ease;
+}
+
+
+body.dark .navbar {
+    background: rgba(17, 24, 39, 0.75);
+}
+
+
+/* =====================================================
+   LOGO
+===================================================== */
+
+.logo {
+    display: flex;
+    align-items: center;
+
+    font-size: 21px;
+    font-weight: 750;
+
+    letter-spacing: -0.5px;
+}
+
+
+.logo-icon {
+    color: var(--primary);
+
+    font-size: 24px;
+
+    margin-right: 8px;
+
+    filter:
+        drop-shadow(
+            0 0 8px rgba(99, 91, 255, 0.25)
+        );
+}
+
+
+.logo span:last-child {
+    color: var(--primary);
+}
+
+
+/* =====================================================
+   THEME BUTTON
+===================================================== */
+
+.theme-button {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid var(--border);
+
+    border-radius: 11px;
+
+    background: var(--card);
+
+    color: var(--text);
+
+    font-size: 18px;
+
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        background 0.2s ease;
+}
+
+
+.theme-button:hover {
+    border-color: var(--primary);
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 5px 15px rgba(99, 91, 255, 0.15);
+}
+
+
+.theme-button:active {
+    transform: scale(0.95);
+}
+
+
+/* =====================================================
+   MAIN
+===================================================== */
+
+main {
+    width: min(1050px, 92%);
+
+    margin: 0 auto;
+
+    padding-bottom: 40px;
+}
+
+
+/* =====================================================
+   HERO
+===================================================== */
+
+.hero {
+    text-align: center;
+
+    padding:
+        75px
+        0
+        42px;
+}
+
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding:
+        8px
+        15px;
+
+    border-radius: 999px;
+
+    background: #eeecff;
+
+    color: var(--primary);
+
+    font-size: 11px;
+
+    font-weight: 800;
+
+    letter-spacing: 1.5px;
+}
+
+
+body.dark .badge {
+    background: #211d40;
+}
+
+
+.hero h1 {
+    margin:
+        20px
+        0
+        18px;
+
+    font-size:
+        clamp(42px, 7vw, 72px);
+
+    line-height: 0.98;
+
+    letter-spacing: -3.5px;
+
+    font-weight: 800;
+}
+
+
+.hero h1 span {
+    display: block;
+
+    color: var(--primary);
+}
+
+
+.hero p {
+    max-width: 650px;
+
+    margin: auto;
+
+    color: var(--muted);
+
+    font-size: 18px;
+
+    line-height: 1.6;
+}
+
+
+/* =====================================================
+   MAIN APPLICATION CARD
+===================================================== */
+
+.main-card {
+    background: var(--card);
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 25px;
+
+    padding: 28px;
+
+    box-shadow: var(--shadow);
+
+    transition:
+        background 0.3s ease,
+        border-color 0.3s ease;
+}
+
+
+/* =====================================================
+   UPLOAD AREA
+===================================================== */
+
+.upload-area {
+    position: relative;
+
+    border:
+        2px dashed #c8c4ff;
+
+    border-radius: 20px;
+
+    padding:
+        50px
+        20px;
+
+    text-align: center;
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(99, 91, 255, 0.035),
+            transparent
+        );
+
+    transition:
+        transform 0.25s ease,
+        border-color 0.25s ease,
+        background 0.25s ease;
+}
+
+
+body.dark .upload-area {
+    border-color: #4d46a5;
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(99, 91, 255, 0.08),
+            transparent
+        );
+}
+
+
+.upload-area:hover {
+    border-color: var(--primary);
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(99, 91, 255, 0.07),
+            transparent
+        );
+}
+
+
+.upload-area.dragging {
+    transform: scale(1.015);
+
+    border-color: var(--primary);
+
+    background:
+        rgba(99, 91, 255, 0.08);
+
+    box-shadow:
+        0 0 0 5px rgba(99, 91, 255, 0.08);
+}
+
+
+/* =====================================================
+   UPLOAD ICON
+===================================================== */
+
+.upload-icon {
+    width: 64px;
+    height: 64px;
+
+    margin:
+        0
+        auto
+        18px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 18px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #eeecff,
+            #e6e2ff
+        );
+
+    color: var(--primary);
+
+    font-size: 32px;
+
+    font-weight: 700;
+
+    box-shadow:
+        0 8px 25px rgba(99, 91, 255, 0.12);
+}
+
+
+body.dark .upload-icon {
+    background:
+        linear-gradient(
+            135deg,
+            #29234f,
+            #211d40
+        );
+}
+
+
+/* =====================================================
+   UPLOAD TEXT
+===================================================== */
+
+.upload-area h2 {
+    margin-bottom: 7px;
+
+    font-size: 22px;
+
+    font-weight: 750;
+}
+
+
+.upload-area p {
+    margin-bottom: 4px;
+
+    color: var(--muted);
+
+    font-size: 15px;
+}
+
+
+.upload-area small {
+    display: block;
+
+    color: var(--muted);
+
+    font-size: 12px;
+
+    margin-top: 4px;
+}
+
+
+/* =====================================================
+   UPLOAD BUTTON
+===================================================== */
+
+.upload-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    margin:
+        17px
+        0
+        10px;
+
+    padding:
+        13px
+        23px;
+
+    border-radius: 11px;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--primary),
+            var(--secondary)
+        );
+
+    color: #ffffff;
+
+    font-size: 14px;
+
+    font-weight: 750;
+
+    box-shadow:
+        0 8px 20px rgba(99, 91, 255, 0.25);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+.upload-button:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 12px 25px rgba(99, 91, 255, 0.32);
+}
+
+
+.upload-button:active {
+    transform: translateY(0);
+}
+
+
+/* =====================================================
+   UPLOAD STATUS
+===================================================== */
+
+.upload-status {
+    min-height: 22px;
+
+    margin-top: 10px;
+
+    color: var(--primary);
+
+    font-size: 13px;
+
+    font-weight: 600;
+}
+
+
+/* =====================================================
+   OR DIVIDER
+===================================================== */
+
+.or {
+    display: flex;
+    align-items: center;
+
+    gap: 15px;
+
+    margin:
+        27px
+        0;
+
+    color: var(--muted);
+
+    font-size: 11px;
+
+    font-weight: 800;
+
+    letter-spacing: 1px;
+}
+
+
+.or::before,
+.or::after {
+    content: "";
+
+    flex: 1;
+
+    height: 1px;
+
+    background: var(--border);
+}
+
+
+/* =====================================================
+   TEXT EDITOR
+===================================================== */
+
+.editor {
+    overflow: hidden;
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 16px;
+
+    background: var(--card);
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+.editor:focus-within {
+    border-color: var(--primary);
+
+    box-shadow:
+        0 0 0 4px rgba(99, 91, 255, 0.08);
+}
+
+
+/* =====================================================
+   EDITOR HEADER / FOOTER
+===================================================== */
+
+.editor-header,
+.editor-footer {
+    min-height: 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding:
+        10px
+        15px;
+
+    background:
+        rgba(100, 100, 100, 0.035);
+
+    color: var(--muted);
+
+    font-size: 13px;
+}
+
+
+.editor-header strong {
+    color: var(--text);
+
+    font-size: 14px;
+}
+
+
+/* =====================================================
+   TEXTAREA
+===================================================== */
+
+textarea {
+    display: block;
+
+    width: 100%;
+
+    min-height: 280px;
+
+    resize: vertical;
+
+    border: none;
+
+    outline: none;
+
+    padding:
+        20px;
+
+    background: var(--card);
+
+    color: var(--text);
+
+    font-family: inherit;
+
+    font-size: 16px;
+
+    line-height: 1.75;
+
+    transition:
+        background 0.3s ease,
+        color 0.3s ease;
+}
+
+
+textarea::placeholder {
+    color: var(--muted);
+
+    opacity: 0.7;
+}
+
+
+/* =====================================================
+   SMALL BUTTON
+===================================================== */
+
+.small-button {
+    border:
+        1px solid var(--border);
+
+    background: var(--card);
+
+    color: var(--text);
+
+    padding:
+        7px
+        11px;
+
+    border-radius: 8px;
+
+    font-size: 12px;
+
+    font-weight: 600;
+
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+
+.small-button:hover {
+    border-color: var(--primary);
+
+    color: var(--primary);
+
+    transform: translateY(-1px);
+}
+
+
+/* =====================================================
+   STATISTICS
+===================================================== */
+
+.statistics {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 12px;
+
+    margin-top: 18px;
+}
+
+
+.stat-card {
+    min-height: 105px;
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 15px;
+
+    padding: 18px;
+
+    background: var(--card);
+
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        background 0.2s ease;
+}
+
+
+.stat-card:hover {
+    transform: translateY(-3px);
+
+    border-color:
+        rgba(99, 91, 255, 0.45);
+
+    background: var(--card-hover);
+
+    box-shadow: var(--shadow-small);
+}
+
+
+.stat-card span {
+    display: block;
+
+    color: var(--muted);
+
+    font-size: 12px;
+
+    line-height: 1.4;
+}
+
+
+.stat-card strong {
+    display: block;
+
+    margin-top: 8px;
+
+    color: var(--text);
+
+    font-size: 27px;
+
+    font-weight: 750;
+
+    letter-spacing: -0.5px;
+
+    overflow-wrap: anywhere;
+}
+
+
+/* =====================================================
+   ADVANCED ANALYSIS
+===================================================== */
+
+.advanced {
+    display: grid;
+
+    grid-template-columns:
+        1fr 1fr;
+
+    gap: 15px;
+
+    margin-top: 18px;
+}
+
+
+.advanced-card {
+    min-height: 170px;
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 16px;
+
+    padding: 20px;
+
+    background: var(--card);
+}
+
+
+.advanced-card h3 {
+    margin-bottom: 12px;
+
+    font-size: 16px;
+}
+
+
+/* =====================================================
+   ANALYSIS ROW
+===================================================== */
+
+.analysis-row {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 15px;
+
+    padding:
+        13px
+        0;
+
+    border-bottom:
+        1px solid var(--border);
+}
+
+
+.analysis-row:last-child {
+    border-bottom: none;
+}
+
+
+.analysis-row span {
+    color: var(--muted);
+
+    font-size: 13px;
+}
+
+
+.analysis-row strong {
+    max-width: 55%;
+
+    color: var(--text);
+
+    text-align: right;
+
+    overflow-wrap: anywhere;
+}
+
+
+/* =====================================================
+   TOP WORDS
+===================================================== */
+
+.top-words {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 8px;
+}
+
+
+.word {
+    display: inline-flex;
+    align-items: center;
+
+    padding:
+        7px
+        11px;
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 50px;
+
+    background:
+        rgba(99, 91, 255, 0.04);
+
+    color: var(--text);
+
+    font-size: 12px;
+
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease;
+}
+
+
+.word:hover {
+    transform: translateY(-2px);
+
+    border-color:
+        rgba(99, 91, 255, 0.45);
+}
+
+
+.empty {
+    color: var(--muted);
+
+    font-size: 13px;
+}
+
+
+/* =====================================================
+   ACTION BUTTONS
+===================================================== */
+
+.actions {
+    display: flex;
+
+    justify-content: flex-end;
+
+    align-items: center;
+
+    gap: 10px;
+
+    margin-top: 20px;
+}
+
+
+.secondary-button {
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 7px;
+
+    min-height: 42px;
+
+    border:
+        1px solid var(--border);
+
+    background: var(--card);
+
+    color: var(--text);
+
+    border-radius: 10px;
+
+    padding:
+        10px
+        15px;
+
+    font-size: 13px;
+
+    font-weight: 650;
+
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        background 0.2s ease;
+}
+
+
+.secondary-button:hover {
+    border-color: var(--primary);
+
+    color: var(--primary);
+
+    transform: translateY(-2px);
+
+    background:
+        rgba(99, 91, 255, 0.04);
+}
+
+
+.secondary-button:active {
+    transform: translateY(0);
+}
+
+
+/* =====================================================
+   FOOTER
+===================================================== */
+
+footer {
+    text-align: center;
+
+    color: var(--muted);
+
+    padding:
+        35px
+        20px;
+
+    font-size: 13px;
+}
+
+
+/* =====================================================
+   SCROLLBAR
+===================================================== */
+
+::-webkit-scrollbar {
+    width: 9px;
+}
+
+
+::-webkit-scrollbar-track {
+    background: var(--background);
+}
+
+
+::-webkit-scrollbar-thumb {
+    background: #aaa7c9;
+
+    border-radius: 20px;
+}
+
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
+}
+
+
+/* =====================================================
+   RESPONSIVE — TABLET
+===================================================== */
+
+@media (max-width: 850px) {
+
+    .statistics {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+
+    .advanced {
+        grid-template-columns:
+            1fr;
+    }
+
+}
+
+
+/* =====================================================
+   RESPONSIVE — MOBILE
+===================================================== */
+
+@media (max-width: 600px) {
+
+    .navbar {
+        height: 64px;
+
+        padding:
+            0
+            4%;
+    }
+
+
+    .logo {
+        font-size: 18px;
+    }
+
+
+    .hero {
+        padding:
+            48px
+            0
+            30px;
+    }
+
+
+    .hero h1 {
+        font-size:
+            clamp(38px, 12vw, 55px);
+
+        letter-spacing: -2.5px;
+    }
+
+
+    .hero p {
+        font-size: 15px;
+    }
+
+
+    .main-card {
+        padding: 15px;
+
+        border-radius: 18px;
+    }
+
+
+    .upload-area {
+        padding:
+            38px
+            15px;
+    }
+
+
+    .upload-area h2 {
+        font-size: 19px;
+    }
+
+
+    .statistics {
+        grid-template-columns:
+            repeat(2, 1fr);
+
+        gap: 9px;
+    }
+
+
+    .stat-card {
+        min-height: 95px;
+
+        padding: 14px;
+    }
+
+
+    .stat-card strong {
+        font-size: 22px;
+    }
+
+
+    .stat-card span {
+        font-size: 11px;
+    }
+
+
+    .advanced {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .actions {
+        flex-direction: column;
+
+        width: 100%;
+    }
+
+
+    .secondary-button {
+        width: 100%;
+    }
+
+
+    textarea {
+        min-height: 240px;
+
+        font-size: 15px;
+    }
+
+}
+
+
+/* =====================================================
+   VERY SMALL PHONES
+===================================================== */
+
+@media (max-width: 380px) {
+
+    .statistics {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .hero h1 {
+        font-size: 38px;
+    }
+
+
+    .upload-icon {
+        width: 55px;
+        height: 55px;
+
+        font-size: 27px;
+    }
+
+}
