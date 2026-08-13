@@ -1,7 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 
 from pathlib import Path
 from io import BytesIO
@@ -588,6 +586,22 @@ def health():
 
 
 # =========================================================
+# ROOT & STATUS
+# =========================================================
+
+@app.get(
+    "/",
+    include_in_schema=False
+)
+async def root():
+
+    return {
+        "message": "WordCounter Pro API is running.",
+        "docs": "/docs"
+    }
+
+
+# =========================================================
 # FILE ANALYSIS
 # =========================================================
 
@@ -769,45 +783,3 @@ async def analyze_file(
                 f"{error}"
             )
         )
-
-
-# =========================================================
-# SERVE FRONTEND
-# =========================================================
-
-STATIC_DIR = Path(
-    __file__
-).parent / "static"
-
-
-if not STATIC_DIR.exists():
-
-    raise RuntimeError(
-        f"Static directory not found: {STATIC_DIR}"
-    )
-
-
-app.mount(
-    "/static",
-    StaticFiles(
-        directory=str(
-            STATIC_DIR
-        )
-    ),
-    name="static"
-)
-
-
-# =========================================================
-# HOME PAGE
-# =========================================================
-
-@app.get(
-    "/",
-    include_in_schema=False
-)
-async def homepage():
-
-    return FileResponse(
-        STATIC_DIR / "index.html"
-    )

@@ -5,6 +5,12 @@
 document.addEventListener("DOMContentLoaded", () => {
 
     // -----------------------------------------------------
+    // CONFIGURATION
+    // -----------------------------------------------------
+
+    const BACKEND_URL = "https://wordcounter-pro.onrender.com";
+
+    // -----------------------------------------------------
     // ELEMENTS
     // -----------------------------------------------------
 
@@ -620,7 +626,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const response =
                 await fetch(
-                    "/api/analyze-file",
+                    `${BACKEND_URL}/api/analyze-file`,
                     {
                         method: "POST",
                         body: formData
